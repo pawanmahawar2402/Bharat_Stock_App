@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+.venv
+**/node_modules
+**/.next
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/*.db
+**/*.sqlite
+upload.py
+.DS_Store
+.gradio
+.deepeval
