@@ -8,7 +8,7 @@ COPY frontend/ ./
 RUN npm run build
 
 FROM python:3.12-slim
-ENV PYTHONUNBUFFERED=1 \
+ENV PORT=7860 PYTHONUNBUFFERED=1 \
     DATABASE_URL=sqlite:////app/backend/bharatstock.db
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
@@ -27,5 +27,5 @@ RUN chmod +x start.sh \
  && mkdir -p /app/backend \
  && chown -R appuser /app
 USER appuser
-EXPOSE 10000
+EXPOSE 7860
 CMD ["./start.sh"]
