@@ -1,3 +1,5 @@
+from app.config import settings
+from app.services.ttl_cache import ttl_cache
 from fastapi import APIRouter, Depends, Query, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import Dict, Any, List, Optional
@@ -168,6 +170,7 @@ def get_stock_financials(symbol: str) -> Dict[str, Any]:
     return DataFetcher.fetch_financial_statements(norm_sym)
 
 @router.get("/peers/{symbol}")
+@ttl_cache(settings.CACHE_TTL_PRICES)
 def get_stock_peers(symbol: str, db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
     norm_sym = DataFetcher.normalize_symbol(symbol)
     stock_info = get_stock_by_symbol(norm_sym, db)

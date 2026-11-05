@@ -57,34 +57,41 @@ export default function StockAnalysisTab({
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Load Stock Data
+  // Load Stock Data: each section renders as soon as its own data arrives.
+  // Peers are slow and only shown on the Peers sub-tab, so they load on demand.
   const loadStockData = async (symbol: string) => {
     setLoading(true);
-    try {
-      const [over, val, tech, fin, prs] = await Promise.all([
-        api.getStockOverview(symbol),
-        api.getStockValuation(symbol),
-        api.getStockTechnicals(symbol, chartPeriod, chartInterval),
-        api.getStockFinancials(symbol),
-        api.getStockPeers(symbol)
-      ]);
-      setOverview(over);
-      setValuation(val);
-      setTechnicals(tech);
-      setFinancials(fin);
-      setPeers(prs);
-
-      if (val?.dcf?.is_applicable) {
-        setLiveDcfResult(val.dcf);
-      } else {
-        setLiveDcfResult(null);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    const overviewJob = api.getStockOverview(symbol)
+      .then((over) => setOverview(over))
+      .catch((err) => { console.error('overview', err); });
+    const valuationJob = api.getStockValuation(symbol)
+      .then((val) => {
+        setValuation(val);
+        setLiveDcfResult(val?.dcf?.is_applicable ? val.dcf : null);
+      })
+      .catch((err) => { console.error('valuation', err); });
+    const technicalJob = api.getStockTechnicals(symbol, chartPeriod, chartInterval)
+      .then((tech) => setTechnicals(tech))
+      .catch((err) => { console.error('technicals', err); });
+    const financialJob = api.getStockFinancials(symbol)
+      .then((fin) => setFinancials(fin))
+      .catch((err) => { console.error('financials', err); });
+    await Promise.allSettled([overviewJob, valuationJob, technicalJob, financialJob]);
+    setLoading(false);
   };
+
+  // Peers load when the Peers sub-tab is opened (or the stock changes while it is open)
+  useEffect(() => {
+    if (subTab !== 'peers' || !selectedSymbol) return;
+    api.getStockPeers(selectedSymbol)
+      .then((prs) => setPeers(Array.isArray(prs) ? prs : []))
+      .catch((err) => { console.error('peers', err); setPeers([]); });
+  }, [subTab, selectedSymbol]);
+
+  // Recalculate the simulator once the valuation has arrived
+  useEffect(() => {
+    if (valuation) handleRecalculateDCF();
+  }, [valuation]);
 
   useEffect(() => {
     if (selectedSymbol) {
