@@ -1,5 +1,6 @@
 import json
 import logging
+from app.services.ttl_cache import ttl_cache
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -29,6 +30,7 @@ class MacroService:
     """
 
     @staticmethod
+    @ttl_cache(settings.CACHE_TTL_PRICES)
     def get_market_indicators() -> List[Dict[str, Any]]:
         """
         Fetches the 10 market indicators from Yahoo Finance with sparkline and % changes.
@@ -196,6 +198,7 @@ class MacroService:
         }
 
     @staticmethod
+    @ttl_cache(settings.CACHE_TTL_MACRO)
     def get_sector_rotation_heatmap() -> List[Dict[str, Any]]:
         """
         Calculates 1W, 1M, and 3M returns and Relative Strength (RS) vs Nifty 50 for sectors.

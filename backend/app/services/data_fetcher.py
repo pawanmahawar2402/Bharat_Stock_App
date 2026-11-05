@@ -12,6 +12,7 @@ import yfinance as yf
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.db.models import PriceCache
+from app.services.ttl_cache import ttl_cache
 
 logger = logging.getLogger(__name__)
 
@@ -174,6 +175,7 @@ class DataFetcher:
             return pd.DataFrame()
 
     @staticmethod
+    @ttl_cache(settings.CACHE_TTL_PRICES)
     def fetch_quote_and_fundamentals(symbol: str, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Multi-tier fundamental extraction:
@@ -429,6 +431,7 @@ class DataFetcher:
         return result_dict
 
     @staticmethod
+    @ttl_cache(settings.CACHE_TTL_FINANCIALS)
     def fetch_financial_statements(symbol: str) -> Dict[str, Any]:
         """
         Fetches Income Statement, Balance Sheet, and Cash Flow Statement (Annual & Quarterly).
