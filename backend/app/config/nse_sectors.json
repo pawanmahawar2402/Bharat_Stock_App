@@ -1,0 +1,64 @@
+{
+  "sectors": [
+    {
+      "name": "Nifty Bank",
+      "ticker": "^NSEBANK",
+      "sector_key": "Financial Services",
+      "description": "Banking sector benchmark (HDFC, ICICI, SBI, Kotak, Axis)"
+    },
+    {
+      "name": "Nifty IT",
+      "ticker": "^CNXIT",
+      "sector_key": "Information Technology",
+      "description": "IT services benchmark (TCS, Infosys, HCL Tech, Wipro, TechM)"
+    },
+    {
+      "name": "Nifty Auto",
+      "ticker": "^CNXAUTO",
+      "sector_key": "Automobile",
+      "description": "Automotive OEMs and auto-ancillaries (M&M, Tata Motors, Maruti, Bajaj Auto)"
+    },
+    {
+      "name": "Nifty Pharma",
+      "ticker": "^CNXPHARMA",
+      "sector_key": "Healthcare",
+      "description": "Pharma and healthcare leaders (Sun Pharma, Dr Reddy, Cipla, Divi's)"
+    },
+    {
+      "name": "Nifty FMCG",
+      "ticker": "^CNXFMCG",
+      "sector_key": "Consumer Goods",
+      "description": "Fast-moving consumer goods (ITC, HUL, Nestle, Britannia, Dabur)"
+    },
+    {
+      "name": "Nifty Metal",
+      "ticker": "^CNXMETAL",
+      "sector_key": "Metals & Mining",
+      "description": "Ferrous and non-ferrous metals (Tata Steel, JSW Steel, Hindalco, Vedanta)"
+    },
+    {
+      "name": "Nifty Realty",
+      "ticker": "^CNXREALTY",
+      "sector_key": "Real Estate",
+      "description": "Real estate developers (DLF, Godrej Properties, Oberoi, Macrotech)"
+    },
+    {
+      "name": "Nifty Energy",
+      "ticker": "^CNXENERGY",
+      "sector_key": "Oil & Gas / Power",
+      "description": "Energy, oil & gas, power (Reliance, NTPC, Power Grid, ONGC, BPCL)"
+    },
+    {
+      "name": "Nifty Infra",
+      "ticker": "^CNXINFRA",
+      "sector_key": "Infrastructure",
+      "description": "Infrastructure and capital goods (L&T, UltraTech, Adani Ports, BHEL)"
+    },
+    {
+      "name": "Nifty PSU Bank",
+      "ticker": "^CNXPSUBANK",
+      "sector_key": "Public Sector Banks",
+      "description": "State-owned lenders (SBI, Bank of Baroda, PNB, Canara Bank, Union Bank)"
+    }
+  ]
+}

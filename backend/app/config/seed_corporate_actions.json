@@ -1,0 +1,194 @@
+{
+  "actions": [
+    {
+      "id": "act-1",
+      "symbol": "TCS.NS",
+      "company_name": "Tata Consultancy Services Ltd.",
+      "action_type": "Dividend",
+      "details": "Interim Dividend ₹10.00 per share",
+      "ex_date": "2024-10-18",
+      "record_date": "2024-10-19",
+      "signal": "Positive",
+      "signal_reason": "Consistent high dividend payout ratio provides strong cash yield cushion.",
+      "market_cap_category": "Large Cap",
+      "sector": "Information Technology"
+    },
+    {
+      "id": "act-2",
+      "symbol": "INFY.NS",
+      "company_name": "Infosys Limited",
+      "action_type": "Dividend",
+      "details": "Interim Dividend ₹21.00 per share",
+      "ex_date": "2024-10-29",
+      "record_date": "2024-10-30",
+      "signal": "Positive",
+      "signal_reason": "High dividend payout reflecting robust operating cash generation.",
+      "market_cap_category": "Large Cap",
+      "sector": "Information Technology"
+    },
+    {
+      "id": "act-3",
+      "symbol": "HDFCBANK.NS",
+      "company_name": "HDFC Bank Limited",
+      "action_type": "Earnings",
+      "details": "Q2 FY25 Financial Results Declaration & Board Meeting",
+      "ex_date": "2024-10-19",
+      "record_date": "2024-10-19",
+      "signal": "Positive",
+      "signal_reason": "Net Profit grew 5.3% YoY to ₹16,821 Cr with stable asset quality (NPA 1.36%).",
+      "market_cap_category": "Large Cap",
+      "sector": "Financial Services"
+    },
+    {
+      "id": "act-4",
+      "symbol": "RELIANCE.NS",
+      "company_name": "Reliance Industries Limited",
+      "action_type": "Bonus",
+      "details": "Bonus Issue 1:1 (1 bonus share for every 1 existing share held)",
+      "ex_date": "2024-10-28",
+      "record_date": "2024-10-28",
+      "signal": "Positive",
+      "signal_reason": "1:1 Bonus issue expands retail liquidity and indicates board confidence in growth.",
+      "market_cap_category": "Large Cap",
+      "sector": "Oil & Gas / Energy"
+    },
+    {
+      "id": "act-5",
+      "symbol": "ITC.NS",
+      "company_name": "ITC Limited",
+      "action_type": "Earnings",
+      "details": "Q2 FY25 Board Meeting for Financial Results & Hotels Demerger Update",
+      "ex_date": "2024-10-24",
+      "record_date": "2024-10-24",
+      "signal": "Neutral",
+      "signal_reason": "Stable cigarette volume growth balanced by moderate agri-business headwinds.",
+      "market_cap_category": "Large Cap",
+      "sector": "Consumer Goods"
+    },
+    {
+      "id": "act-6",
+      "symbol": "BAJFINANCE.NS",
+      "company_name": "Bajaj Finance Limited",
+      "action_type": "Earnings",
+      "details": "Q2 FY25 Quarterly Financial Results",
+      "ex_date": "2024-10-22",
+      "record_date": "2024-10-22",
+      "signal": "Positive",
+      "signal_reason": "AUM grew 29% YoY with healthy credit cost trajectory.",
+      "market_cap_category": "Large Cap",
+      "sector": "Financial Services"
+    },
+    {
+      "id": "act-7",
+      "symbol": "TATAMOTORS.NS",
+      "company_name": "Tata Motors Limited",
+      "action_type": "Stock Split",
+      "details": "Commercial and Passenger Vehicle Demerger & Re-alignment",
+      "ex_date": "2024-11-05",
+      "record_date": "2024-11-05",
+      "signal": "Positive",
+      "signal_reason": "Strategic business demerger unlocks dedicated shareholder value for EV/PV divisions.",
+      "market_cap_category": "Large Cap",
+      "sector": "Automobile"
+    },
+    {
+      "id": "act-8",
+      "symbol": "LT.NS",
+      "company_name": "Larsen & Toubro Ltd.",
+      "action_type": "Board Meeting",
+      "details": "Q2 Earnings and Middle East Mega-Order Pipeline review",
+      "ex_date": "2024-10-30",
+      "record_date": "2024-10-30",
+      "signal": "Positive",
+      "signal_reason": "Record order backlog above ₹5.1 Lakh Crore supporting 2-3 years revenue visibility.",
+      "market_cap_category": "Large Cap",
+      "sector": "Infrastructure"
+    }
+  ],
+  "quarterly_results": [
+    {
+      "symbol": "TCS.NS",
+      "company_name": "Tata Consultancy Services",
+      "quarter": "Q2 FY25",
+      "revenue_cr": 64259.0,
+      "pat_cr": 11909.0,
+      "revenue_yoy_pct": 7.6,
+      "pat_yoy_pct": 5.0,
+      "qoq_pat_growth": -1.1,
+      "beat_miss": "In-line",
+      "ebit_margin_pct": 24.1,
+      "signal": "Neutral"
+    },
+    {
+      "symbol": "HDFCBANK.NS",
+      "company_name": "HDFC Bank Ltd.",
+      "quarter": "Q2 FY25",
+      "revenue_cr": 85450.0,
+      "pat_cr": 16821.0,
+      "revenue_yoy_pct": 11.2,
+      "pat_yoy_pct": 5.3,
+      "qoq_pat_growth": 4.0,
+      "beat_miss": "Beat",
+      "ebit_margin_pct": 4.1,
+      "signal": "Positive"
+    },
+    {
+      "symbol": "INFY.NS",
+      "company_name": "Infosys Limited",
+      "quarter": "Q2 FY25",
+      "revenue_cr": 40986.0,
+      "pat_cr": 6506.0,
+      "revenue_yoy_pct": 5.1,
+      "pat_yoy_pct": 4.7,
+      "qoq_pat_growth": 2.2,
+      "beat_miss": "Beat",
+      "ebit_margin_pct": 21.1,
+      "signal": "Positive"
+    },
+    {
+      "symbol": "RELIANCE.NS",
+      "company_name": "Reliance Industries",
+      "quarter": "Q2 FY25",
+      "revenue_cr": 235481.0,
+      "pat_cr": 16563.0,
+      "revenue_yoy_pct": 0.2,
+      "pat_yoy_pct": -4.8,
+      "qoq_pat_growth": 9.4,
+      "beat_miss": "In-line",
+      "ebit_margin_pct": 17.5,
+      "signal": "Neutral"
+    }
+  ],
+  "bulk_deals": [
+    {
+      "date": "2024-10-18",
+      "symbol": "ZOMATO.NS",
+      "company_name": "Zomato Ltd.",
+      "client_name": "Societe Generale",
+      "deal_type": "BUY",
+      "quantity": 18500000,
+      "price": 272.50,
+      "value_cr": 504.12
+    },
+    {
+      "date": "2024-10-18",
+      "symbol": "JIOFIN.NS",
+      "company_name": "Jio Financial Services",
+      "client_name": "Morgan Stanley Asia Singapore",
+      "deal_type": "BUY",
+      "quantity": 12000000,
+      "price": 328.15,
+      "value_cr": 393.78
+    },
+    {
+      "date": "2024-10-17",
+      "symbol": "TATASTEEL.NS",
+      "company_name": "Tata Steel Ltd.",
+      "client_name": "LIC of India",
+      "deal_type": "BUY",
+      "quantity": 8500000,
+      "price": 149.20,
+      "value_cr": 126.82
+    }
+  ]
+}

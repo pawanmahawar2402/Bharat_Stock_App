@@ -1,0 +1,83 @@
+{
+  "rbi_repo_rate": {
+    "value": 6.50,
+    "unit": "%",
+    "change_1d": 0.0,
+    "change_1m": 0.0,
+    "source": "RBI Monetary Policy Committee",
+    "last_updated": "2024-10-09T10:00:00+05:30",
+    "description": "Key policy repo rate set by RBI MPC"
+  },
+  "cpi_inflation": {
+    "value": 4.85,
+    "unit": "% YoY",
+    "change_1d": 0.0,
+    "change_1m": -0.25,
+    "source": "MOSPI (Ministry of Statistics)",
+    "last_updated": "2024-10-14T17:30:00+05:30",
+    "description": "All India Consumer Price Index headline inflation"
+  },
+  "gdp_growth_rate": {
+    "value": 6.80,
+    "unit": "% YoY",
+    "change_1d": 0.0,
+    "change_1m": 0.0,
+    "source": "MOSPI / RBI DBIE",
+    "last_updated": "2024-08-31T17:30:00+05:30",
+    "description": "Real GDP Growth Rate (Q1 FY25)"
+  },
+  "india_10y_gsec": {
+    "value": 6.78,
+    "unit": "%",
+    "change_1d": -0.02,
+    "change_1m": -0.09,
+    "source": "CCIL / RBI DBIE",
+    "last_updated": "2024-10-18T16:00:00+05:30",
+    "description": "India 10-Year Benchmark Sovereign Bond Yield"
+  },
+  "forex_reserves": {
+    "value": 690.43,
+    "unit": "$ Billion",
+    "change_1d": 0.0,
+    "change_1m": 4.5,
+    "source": "RBI Weekly Statistical Supplement",
+    "last_updated": "2024-10-11T17:00:00+05:30",
+    "description": "Total Foreign Exchange Reserves of India"
+  },
+  "iip_growth": {
+    "value": 4.20,
+    "unit": "% YoY",
+    "change_1d": 0.0,
+    "change_1m": 0.80,
+    "source": "MOSPI",
+    "last_updated": "2024-09-12T17:30:00+05:30",
+    "description": "Index of Industrial Production Growth"
+  },
+  "manufacturing_pmi": {
+    "value": 56.50,
+    "unit": "Index",
+    "change_1d": 0.0,
+    "change_1m": -0.50,
+    "source": "S&P Global / HSBC India",
+    "last_updated": "2024-10-01T10:30:00+05:30",
+    "description": "India Manufacturing Purchasing Managers' Index"
+  },
+  "services_pmi": {
+    "value": 57.70,
+    "unit": "Index",
+    "change_1d": 0.0,
+    "change_1m": -1.20,
+    "source": "S&P Global / HSBC India",
+    "last_updated": "2024-10-03T10:30:00+05:30",
+    "description": "India Services Purchasing Managers' Index"
+  },
+  "fii_dii_recent": {
+    "fii_net_1d": -2450.60,
+    "dii_net_1d": 3120.40,
+    "fii_net_5d": -12890.50,
+    "dii_net_5d": 15430.20,
+    "unit": "₹ Crore",
+    "source": "NSE India Daily Cash Flow Reporting",
+    "last_updated": "2024-10-18T18:00:00+05:30"
+  }
+}

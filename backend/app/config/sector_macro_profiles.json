@@ -1,0 +1,43 @@
+{
+  "_comment": "Macro sensitivity profiles. Each sensitivity is in [-1, 1]: how strongly a stock's business responds to that factor. Positive = benefits when the factor rises. Profiles are matched on industry/sector text (first match wins; 'default' is the fallback). These are analyst judgement inputs, not estimated betas; review them when the market structure changes.",
+  "factors": {
+    "crude":    "Brent crude 1M % change (rising = positive for upstream, negative for input-heavy users)",
+    "usd_inr":  "USD/INR 1M % change (rising = weaker rupee, positive for exporters)",
+    "us_yield": "US 10Y yield level vs 4.0% neutral (rising = higher global rates, negative for rate-sensitive)",
+    "vix":      "India VIX level vs 15 neutral (rising = more fear, negative for most equities)",
+    "nifty":    "Nifty 50 1M % change (domestic risk appetite)",
+    "nasdaq":   "Nasdaq 1M % change (global technology demand)"
+  },
+  "profiles": [
+    {"name": "IT services", "match": ["software", "it services", "information technology", "internet content"],
+     "sensitivities": {"usd_inr": 0.8, "nasdaq": 0.6, "nifty": 0.2, "vix": -0.2}},
+    {"name": "Pharma", "match": ["drug manufacturers", "pharma", "biotech", "healthcare", "medical"],
+     "sensitivities": {"usd_inr": 0.5, "nasdaq": 0.1, "nifty": 0.2, "vix": -0.2}},
+    {"name": "Oil marketing and refining", "match": ["oil & gas refining", "oil marketing", "refining & marketing"],
+     "sensitivities": {"crude": -0.8, "usd_inr": -0.5, "nifty": 0.2}},
+    {"name": "Upstream energy and mining", "match": ["oil & gas e&p", "exploration", "coal", "oil & gas integrated"],
+     "sensitivities": {"crude": 0.7, "usd_inr": 0.3, "nifty": 0.2, "vix": -0.2}},
+    {"name": "Auto", "match": ["auto manufacturers", "auto parts", "automobile", "auto"],
+     "sensitivities": {"crude": -0.4, "us_yield": -0.2, "nifty": 0.5, "vix": -0.3}},
+    {"name": "Banks and lenders", "match": ["bank", "nbfc", "credit services", "financial", "lending", "insurance"],
+     "sensitivities": {"us_yield": -0.2, "nifty": 0.6, "vix": -0.4}},
+    {"name": "Real estate", "match": ["real estate", "realty", "reit", "construction materials"],
+     "sensitivities": {"us_yield": -0.6, "nifty": 0.5, "vix": -0.4}},
+    {"name": "Metals", "match": ["steel", "aluminum", "aluminium", "metal", "copper"],
+     "sensitivities": {"crude": -0.2, "usd_inr": 0.2, "us_yield": -0.3, "nifty": 0.5, "vix": -0.2}},
+    {"name": "Chemicals", "match": ["chemical", "specialty chemicals", "agrochemical"],
+     "sensitivities": {"crude": -0.5, "usd_inr": 0.4, "nifty": 0.3, "vix": -0.2}},
+    {"name": "FMCG and consumer staples", "match": ["consumer defensive", "fmcg", "household", "packaged", "beverages", "food", "tobacco"],
+     "sensitivities": {"crude": -0.3, "nifty": 0.3, "vix": -0.1}},
+    {"name": "Consumer discretionary", "match": ["consumer cyclical", "retail", "hotel", "apparel", "restaurant", "travel", "aviation", "airline"],
+     "sensitivities": {"crude": -0.3, "nifty": 0.6, "vix": -0.4}},
+    {"name": "Capital goods and infrastructure", "match": ["industrial", "capital goods", "engineering", "infrastructure", "electrical", "machinery", "defense"],
+     "sensitivities": {"crude": -0.1, "us_yield": -0.3, "nifty": 0.6, "vix": -0.3}},
+    {"name": "Telecom and media", "match": ["telecom", "communication", "media", "broadcast"],
+     "sensitivities": {"nifty": 0.2, "vix": -0.2}},
+    {"name": "Utilities and power", "match": ["utilities", "power", "electric utilities", "renewable"],
+     "sensitivities": {"us_yield": -0.4, "nifty": 0.3, "vix": -0.1}},
+    {"name": "Default (unclassified)", "match": [],
+     "sensitivities": {"nifty": 0.5, "vix": -0.4}}
+  ]
+}

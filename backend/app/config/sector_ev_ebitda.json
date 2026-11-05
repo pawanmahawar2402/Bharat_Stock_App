@@ -1,0 +1,14 @@
+{
+  "_comment": "Fallback EV/EBITDA multiples (x) used ONLY when a live peer-median multiple is unavailable. These are analyst assumptions, not market data; they are flagged in every output that uses them. Replace with a refreshed peer median where possible.",
+  "Technology": 22.0,
+  "Healthcare": 22.0,
+  "Consumer Defensive": 35.0,
+  "Consumer Cyclical": 25.0,
+  "Industrials": 24.0,
+  "Basic Materials": 9.0,
+  "Energy": 9.0,
+  "Utilities": 12.0,
+  "Real Estate": 15.0,
+  "Communication Services": 14.0,
+  "default": 15.0
+}
