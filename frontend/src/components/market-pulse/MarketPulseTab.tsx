@@ -17,22 +17,23 @@ export default function MarketPulseTab({ onSelectStock }: { onSelectStock: (sym:
 
   const loadPulseData = async () => {
     setLoading(true);
-    try {
-      const [acts, resList, dealList, actData] = await Promise.all([
-        api.getCorporateActions({ action_type: actionFilter, market_cap: marketCapFilter }),
-        api.getQuarterlyResults(),
-        api.getBulkDeals(),
-        api.getMarketActivity()
-      ]);
-      setActions(acts);
-      setResults(resList);
-      setDeals(dealList);
-      setActivity(actData);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    // Each section loads independently: a slow or failed call no longer blanks the whole page.
+    const jobs = [
+      api.getCorporateActions({ action_type: actionFilter, market_cap: marketCapFilter })
+        .then((acts) => setActions(Array.isArray(acts) ? acts : []))
+        .catch((err) => { console.error('corporate actions', err); setActions([]); }),
+      api.getQuarterlyResults()
+        .then((res) => setResults(Array.isArray(res) ? res : []))
+        .catch((err) => { console.error('results', err); setResults([]); }),
+      api.getBulkDeals()
+        .then((d) => setDeals(Array.isArray(d) ? d : []))
+        .catch((err) => { console.error('deals', err); setDeals([]); }),
+      api.getMarketActivity()
+        .then((a) => setActivity(a && typeof a === 'object' ? a : null))
+        .catch((err) => { console.error('activity', err); setActivity(null); }),
+    ];
+    await Promise.allSettled(jobs);
+    setLoading(false);
   };
 
   useEffect(() => {

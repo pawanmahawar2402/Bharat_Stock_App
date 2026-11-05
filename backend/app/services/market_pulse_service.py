@@ -1,3 +1,5 @@
+from app.config import settings
+from app.services.ttl_cache import ttl_cache
 import json
 import logging
 from pathlib import Path
@@ -64,6 +66,7 @@ class MarketPulseService:
         return seed.get("bulk_deals", [])
 
     @staticmethod
+    @ttl_cache(settings.CACHE_TTL_PRICES)
     def get_market_activity_summary() -> Dict[str, Any]:
         """
         Fetches daily top gainers/losers, volume spikes, and 52W breakouts across Nifty 50.
