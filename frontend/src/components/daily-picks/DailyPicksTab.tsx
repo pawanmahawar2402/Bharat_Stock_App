@@ -77,7 +77,7 @@ export default function DailyPicksTab() {
     <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Top 10 Stock Picks</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Best Recommended Picks</h2>
           {result && (
             <p className="text-sm text-slate-500 mt-1">
               As of {new Date(result.generated_at).toLocaleString('en-IN')}
@@ -113,46 +113,59 @@ export default function DailyPicksTab() {
       )}
 
       {result && rows.length > 0 && (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-950 text-xs text-slate-500 uppercase tracking-wider">
-              <tr>
-                <th className="p-3 text-left">#</th>
-                <th className="p-3 text-left">Company</th>
-                <th className="p-3 text-left">Sector</th>
-                <th className="p-3 text-left">Conviction</th>
-                <th className="p-3 text-right">Score</th>
-                <th className="p-3 text-left">Signal</th>
-                <th className="p-3 text-right">Entry</th>
-                <th className="p-3 text-right">Stop loss</th>
-                <th className="p-3 text-right">Target</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r: any) => (
-                <tr key={r.symbol} className="border-t border-slate-100 dark:border-slate-800">
-                  <td className="p-3 font-bold text-slate-500">{r.rank}</td>
-                  <td className="p-3">
-                    <div className="font-semibold text-slate-900 dark:text-slate-100">{r.company_name}</div>
-                    <div className="text-[11px] text-slate-500">{r.symbol}</div>
-                  </td>
-                  <td className="p-3 text-xs text-slate-600 dark:text-slate-400">{r.sector}</td>
-                  <td className="p-3 text-xs font-semibold">{r.conviction}</td>
-                  <td className="p-3 text-right text-xs">{formatNumber(r.composite_score)}</td>
-                  <td className="p-3 text-xs">{r.signal || '—'}</td>
-                  <td className="p-3 text-right text-xs">{r.entry_zone ?? '—'}</td>
-                  <td className="p-3 text-right text-xs text-rose-600">{r.stop_loss != null ? `₹${formatNumber(r.stop_loss)}` : '—'}</td>
-                  <td className="p-3 text-right text-xs text-emerald-600">{r.target_1 != null ? `₹${formatNumber(r.target_1)}` : '—'}</td>
+        <div className="space-y-3">
+          <p className="text-xs text-slate-500">
+            Ranked by Darvas box setup: breakouts first, then near-breakouts, then watchlist names that have not triggered yet.
+            {' '}{rows.filter((r: any) => r.tier === 'Actionable').length} actionable, {rows.filter((r: any) => r.tier !== 'Actionable').length} watchlist.
+          </p>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-950 text-xs text-slate-500 uppercase tracking-wider">
+                <tr>
+                  <th className="p-3 text-left">#</th>
+                  <th className="p-3 text-left">Company</th>
+                  <th className="p-3 text-left">Sector</th>
+                  <th className="p-3 text-left">Darvas status</th>
+                  <th className="p-3 text-right">Score</th>
+                  <th className="p-3 text-left">Breakout pattern</th>
+                  <th className="p-3 text-right">Box (bottom to top)</th>
+                  <th className="p-3 text-right">Entry</th>
+                  <th className="p-3 text-right">Stop loss</th>
+                  <th className="p-3 text-right">Target</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r: any) => (
+                  <tr key={r.symbol} className="border-t border-slate-100 dark:border-slate-800">
+                    <td className="p-3 font-bold text-slate-500">{r.rank}</td>
+                    <td className="p-3">
+                      <div className="font-semibold text-slate-900 dark:text-slate-100">{r.company_name}</div>
+                      <div className="text-[11px] text-slate-500">{r.symbol}</div>
+                    </td>
+                    <td className="p-3 text-xs text-slate-600 dark:text-slate-400">{r.sector}</td>
+                    <td className="p-3 text-xs font-semibold">
+                      {r.darvas_status}
+                      {r.tier !== 'Actionable' && <span className="block text-[10px] font-normal text-slate-500">Not triggered</span>}
+                    </td>
+                    <td className="p-3 text-right text-xs">{formatNumber(r.score)}</td>
+                    <td className="p-3 text-xs">{r.signal || '—'}</td>
+                    <td className="p-3 text-right text-xs">
+                      {r.box_bottom != null && r.box_top != null ? `₹${formatNumber(r.box_bottom)} – ₹${formatNumber(r.box_top)}` : '—'}
+                    </td>
+                    <td className="p-3 text-right text-xs">{r.entry != null ? `₹${formatNumber(r.entry)}` : '—'}</td>
+                    <td className="p-3 text-right text-xs text-rose-600">{r.stop_loss != null ? `₹${formatNumber(r.stop_loss)}` : '—'}</td>
+                    <td className="p-3 text-right text-xs text-emerald-600">{r.target != null ? `₹${formatNumber(r.target)}` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {result && rows.length === 0 && (
         <div className="p-6 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-sm text-slate-500">
-          No picks yet. Click “Update picks” to generate the list.
+          No Darvas setups today. Click “Update picks” to refresh.
         </div>
       )}
 

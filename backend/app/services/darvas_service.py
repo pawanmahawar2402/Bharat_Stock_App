@@ -232,4 +232,4 @@ class DarvasScanner:
                     logger.error(f"Darvas analysis failed for {sym}: {e}")
         results.sort(key=lambda r: r["score"], reverse=True)
         return {"considered": len(symbols_with_meta), "analysed": analysed,
-                "setups_found": len(results), "picks": results[:5]}
+                "setups_found": len(results), "picks": results[:10]}

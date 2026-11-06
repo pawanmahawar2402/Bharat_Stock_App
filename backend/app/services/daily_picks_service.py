@@ -165,6 +165,31 @@ def top_ranked(candidates: List[Dict[str, Any]], n: int = 10) -> List[Dict[str, 
     return rows
 
 
+def darvas_top_ten(darvas: Dict[str, Any], n: int = 10) -> List[Dict[str, Any]]:
+    """Best Picks ranked by Darvas box setup: breakouts first, then near breakouts, then watchlist names."""
+    rows = []
+    for i, d in enumerate(darvas.get("picks", [])[:n], 1):
+        plan = d.get("plan") or {}
+        box = d.get("box") or {}
+        rows.append({
+            "rank": i,
+            "symbol": d["symbol"],
+            "company_name": d.get("company_name", d["symbol"]),
+            "sector": d.get("sector", ""),
+            "darvas_status": d["status"],
+            "tier": d.get("tier", ""),
+            "score": d["score"],
+            "signal": d.get("signal", ""),
+            "current_price": box.get("last_close"),
+            "box_top": box.get("box_top"),
+            "box_bottom": box.get("box_bottom"),
+            "entry": plan.get("entry"),
+            "stop_loss": plan.get("stop_loss"),
+            "target": plan.get("target"),
+        })
+    return rows
+
+
 class DailyPicksEngine:
     _lock = threading.Lock()
     _status: Dict[str, Any] = {"state": "idle", "started_at": None, "finished_at": None,
@@ -343,7 +368,7 @@ class DailyPicksEngine:
                 "universe_size": len(universe),
                 "eligible_count": len(candidates),
                 "picks": picks,
-                "top_ten": top_ranked(candidates, 10),
+                "top_ten": darvas_top_ten(darvas),
                 "high_conviction_count": len(high),
                 "darvas": darvas,
                 "data_sources": [src.name for src in reg.sources],
