@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     CACHE_TTL_SWING: int = 1800       # 30 minutes
     
     # Market-data sources, in priority order (see app/sources/registry.py)
-    DATA_SOURCES: str = "yahoo,statement_derived"
+    DATA_SOURCES: str = "yahoo,stock_list,statement_derived"
 
     # Daily Two Picks engine
     DAILY_UNIVERSE_SIZE: int = 120    # Nifty 500 names screened per run

@@ -14,6 +14,7 @@ import pandas as pd
 from app.config import settings
 from app.sources.base import DataSource
 from app.sources.statement_source import StatementDerivedSource
+from app.sources.stock_list_source import StockListSource
 from app.sources.yahoo_source import YahooSource
 
 logger = logging.getLogger(__name__)
@@ -21,11 +22,15 @@ logger = logging.getLogger(__name__)
 AVAILABLE_SOURCES = {
     "yahoo": YahooSource,
     "statement_derived": StatementDerivedSource,
+    "stock_list": StockListSource,
 }
 
 
+PLACEHOLDERS = {"N/A", "Diversified", ""}
+
+
 def _missing(v: Any) -> bool:
-    if v is None or v == "N/A":
+    if v is None or (isinstance(v, str) and v in PLACEHOLDERS):
         return True
     if isinstance(v, float) and math.isnan(v):
         return True
