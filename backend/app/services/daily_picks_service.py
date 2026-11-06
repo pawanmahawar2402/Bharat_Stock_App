@@ -133,6 +133,38 @@ def _risk_points(val: Dict[str, Any], tech: Dict[str, Any], sentiment: Dict[str,
     return risks
 
 
+def top_ranked(candidates: List[Dict[str, Any]], n: int = 10) -> List[Dict[str, Any]]:
+    """
+    Best names by composite score. High-conviction names rank above lower-conviction ones, and each row
+    keeps its conviction label, so weaker names are never presented as high conviction.
+    """
+    order = {"High": 2, "Moderate": 1, "Low": 0}
+    ranked = sorted(
+        candidates,
+        key=lambda c: (order.get(c["conviction"], 0), c["triangulation"]["composite_score"]),
+        reverse=True,
+    )[:n]
+    rows = []
+    for i, c in enumerate(ranked, 1):
+        plan = c.get("trade_plan") or {}
+        rows.append({
+            "rank": i,
+            "symbol": c["symbol"],
+            "company_name": c["company_name"],
+            "sector": c["sector"],
+            "conviction": c["conviction"],
+            "action": c["triangulation"]["action"],
+            "composite_score": c["triangulation"]["composite_score"],
+            "signal": c.get("signal", ""),
+            "current_price": c["current_price"],
+            "entry_zone": plan.get("entry_zone"),
+            "stop_loss": plan.get("stop_loss"),
+            "target_1": plan.get("target_1"),
+            "gates_failed": c.get("gate_failures", []),
+        })
+    return rows
+
+
 class DailyPicksEngine:
     _lock = threading.Lock()
     _status: Dict[str, Any] = {"state": "idle", "started_at": None, "finished_at": None,
@@ -311,6 +343,7 @@ class DailyPicksEngine:
                 "universe_size": len(universe),
                 "eligible_count": len(candidates),
                 "picks": picks,
+                "top_ten": top_ranked(candidates, 10),
                 "high_conviction_count": len(high),
                 "darvas": darvas,
                 "data_sources": [src.name for src in reg.sources],

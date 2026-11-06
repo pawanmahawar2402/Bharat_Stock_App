@@ -272,3 +272,13 @@ def test_implied_multiple_solves_back_to_market_ev():
     target = fe.value_driver_ev(14.8 * nop, 0.08, 0.12, 0.12, 0.045)
     k = fe._implied_nopat_multiple(target, nop, 0.08, 0.12, 0.12, 0.045)
     assert abs(k - 14.8) < 0.01
+
+
+def test_top_ranked_puts_high_conviction_first_and_keeps_labels():
+    from app.services.daily_picks_service import top_ranked
+    def cand(sym, conv, comp):
+        return {"symbol": sym, "company_name": sym, "sector": "X", "conviction": conv, "current_price": 1.0,
+                "triangulation": {"action": "Hold", "composite_score": comp}, "gate_failures": [], "signal": ""}
+    rows = top_ranked([cand("A", "Low", 90), cand("B", "High", 60), cand("C", "Moderate", 80), cand("D", "High", 70)], 3)
+    assert [r["symbol"] for r in rows] == ["D", "B", "C"]
+    assert [r["conviction"] for r in rows] == ["High", "High", "Moderate"]

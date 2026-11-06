@@ -16,47 +16,6 @@ type Row = {
   target: number | null;
 };
 
-// Builds the top-5 list: High-conviction picks first, then Darvas setups, no duplicates.
-function buildTopFive(result: any): Row[] {
-  const rows: Row[] = [];
-  const seen = new Set<string>();
-
-  for (const p of result?.picks ?? []) {
-    if (seen.has(p.symbol)) continue;
-    seen.add(p.symbol);
-    const plan = p.trade_plan || {};
-    rows.push({
-      key: `pick-${p.symbol}`,
-      company: p.company_name,
-      symbol: p.symbol,
-      sector: p.sector,
-      label: p.signal ?? '',
-      entry: plan.entry_zone ?? '',
-      stop: plan.stop_loss ?? null,
-      target: plan.target_1 ?? null,
-    });
-  }
-
-  for (const d of result?.darvas?.picks ?? []) {
-    if (rows.length >= 5) break;
-    if (seen.has(d.symbol)) continue;
-    seen.add(d.symbol);
-    const plan = d.plan || {};
-    rows.push({
-      key: `darvas-${d.symbol}`,
-      company: d.company_name,
-      symbol: d.symbol,
-      sector: d.sector,
-      label: d.signal ?? '',
-      entry: plan.entry != null ? `₹${formatNumber(plan.entry)}` : '',
-      stop: plan.stop_loss ?? null,
-      target: plan.target ?? null,
-    });
-  }
-
-  return rows.slice(0, 5);
-}
-
 export default function DailyPicksTab() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -112,13 +71,13 @@ export default function DailyPicksTab() {
   }, [load]);
 
   const result = data?.result;
-  const rows = buildTopFive(result);
+  const rows: any[] = result?.top_ten ?? [];
 
   return (
     <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Top 5 Stock Picks</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Top 10 Stock Picks</h2>
           {result && (
             <p className="text-sm text-slate-500 mt-1">
               As of {new Date(result.generated_at).toLocaleString('en-IN')}
@@ -161,6 +120,8 @@ export default function DailyPicksTab() {
                 <th className="p-3 text-left">#</th>
                 <th className="p-3 text-left">Company</th>
                 <th className="p-3 text-left">Sector</th>
+                <th className="p-3 text-left">Conviction</th>
+                <th className="p-3 text-right">Score</th>
                 <th className="p-3 text-left">Signal</th>
                 <th className="p-3 text-right">Entry</th>
                 <th className="p-3 text-right">Stop loss</th>
@@ -168,18 +129,20 @@ export default function DailyPicksTab() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r, i) => (
-                <tr key={r.key} className="border-t border-slate-100 dark:border-slate-800">
-                  <td className="p-3 font-bold text-slate-500">{i + 1}</td>
+              {rows.map((r: any) => (
+                <tr key={r.symbol} className="border-t border-slate-100 dark:border-slate-800">
+                  <td className="p-3 font-bold text-slate-500">{r.rank}</td>
                   <td className="p-3">
-                    <div className="font-semibold text-slate-900 dark:text-slate-100">{r.company}</div>
+                    <div className="font-semibold text-slate-900 dark:text-slate-100">{r.company_name}</div>
                     <div className="text-[11px] text-slate-500">{r.symbol}</div>
                   </td>
                   <td className="p-3 text-xs text-slate-600 dark:text-slate-400">{r.sector}</td>
-                  <td className="p-3 text-xs font-semibold">{r.label}</td>
-                  <td className="p-3 text-right text-xs">{r.entry}</td>
-                  <td className="p-3 text-right text-xs text-rose-600">{r.stop != null ? `₹${formatNumber(r.stop)}` : '—'}</td>
-                  <td className="p-3 text-right text-xs text-emerald-600">{r.target != null ? `₹${formatNumber(r.target)}` : '—'}</td>
+                  <td className="p-3 text-xs font-semibold">{r.conviction}</td>
+                  <td className="p-3 text-right text-xs">{formatNumber(r.composite_score)}</td>
+                  <td className="p-3 text-xs">{r.signal || '—'}</td>
+                  <td className="p-3 text-right text-xs">{r.entry_zone ?? '—'}</td>
+                  <td className="p-3 text-right text-xs text-rose-600">{r.stop_loss != null ? `₹${formatNumber(r.stop_loss)}` : '—'}</td>
+                  <td className="p-3 text-right text-xs text-emerald-600">{r.target_1 != null ? `₹${formatNumber(r.target_1)}` : '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -189,7 +152,7 @@ export default function DailyPicksTab() {
 
       {result && rows.length === 0 && (
         <div className="p-6 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-sm text-slate-500">
-          No picks today.
+          No picks yet. Click “Update picks” to generate the list.
         </div>
       )}
 
