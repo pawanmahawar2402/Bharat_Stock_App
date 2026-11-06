@@ -457,6 +457,8 @@ def run_valuation(fundamentals: Dict[str, Any], financials: Dict[str, Any],
     """
     gaps: List[str] = []
     assumptions: Dict[str, Any] = {}
+    if not (financials.get("currency") or {}).get("reported_currency"):
+        gaps.append("Statement currency could not be confirmed; figures are used as reported")
 
     price = num(fundamentals.get("current_price")) or 0.0
     mcap = num(fundamentals.get("market_cap")) or 0.0

@@ -10,6 +10,7 @@ from app.services.stock_master import search_stocks, get_stock_by_symbol
 from app.services.research_service import build_research_note
 from app.services.macro_service import MacroService
 from app.services.data_fetcher import DataFetcher
+from app.sources.registry import SourceRegistry
 from app.services.valuation_service import ValuationEngine
 from app.services.technical_service import TechnicalEngine
 from app.services.market_pulse_service import MarketPulseService
@@ -51,7 +52,8 @@ def search_stock_autocomplete(
 def get_stock_overview(symbol: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     norm_sym = DataFetcher.normalize_symbol(symbol)
     stock_info = get_stock_by_symbol(norm_sym, db)
-    fundamentals = DataFetcher.fetch_quote_and_fundamentals(norm_sym, db=db)
+    # Source layer: fills missing ratios (P/E, P/B, EPS, book value) from statements when a quote source omits them
+    fundamentals = SourceRegistry.from_settings().fundamentals(norm_sym)
     
     # Financials for valuation
     financials = DataFetcher.fetch_financial_statements(norm_sym)
@@ -115,7 +117,8 @@ def get_research_note(symbol: str, db: Session = Depends(get_db)) -> Dict[str, A
 @router.get("/valuation/{symbol}")
 def get_stock_valuation(symbol: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     norm_sym = DataFetcher.normalize_symbol(symbol)
-    fundamentals = DataFetcher.fetch_quote_and_fundamentals(norm_sym, db=db)
+    # Source layer: fills missing ratios (P/E, P/B, EPS, book value) from statements when a quote source omits them
+    fundamentals = SourceRegistry.from_settings().fundamentals(norm_sym)
     financials = DataFetcher.fetch_financial_statements(norm_sym)
     return ValuationEngine.calculate_valuation_summary(fundamentals, financials)
 
