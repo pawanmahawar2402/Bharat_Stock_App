@@ -56,6 +56,7 @@ app.include_router(stock_analysis.router, prefix=settings.API_V1_STR)
 app.include_router(daily_picks.router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["Health"])
+@app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
 def health_check():
     return {
         "status": "healthy",
