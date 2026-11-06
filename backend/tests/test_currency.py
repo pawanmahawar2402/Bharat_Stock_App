@@ -21,3 +21,20 @@ def test_missing_fx_rate_yields_no_value_not_a_wrong_one(monkeypatch):
     monkeypatch.setattr(df_mod, "get_fx_rate", lambda pair: None)
     info = {"financialCurrency": "USD", "currency": "INR", "ebitda": 5.0e9}
     assert df_mod._info_amount(info, "ebitda") == "N/A"
+
+
+def test_infers_usd_for_infosys_like_figures(monkeypatch):
+    # Infosys: revenue 2.0158e10 (USD), 4.05e9 shares, price Rs 1169, USD/INR 94.5
+    res = df_mod._infer_factor(2.0158e10, 4.05e9, 1169.0, 94.5)
+    assert res == ("USD", 94.5)
+
+
+def test_infers_inr_for_tcs_like_figures():
+    # TCS: revenue 2.67e12 (INR), 3.62e9 shares, price Rs 2500
+    res = df_mod._infer_factor(2.67e12, 3.62e9, 2500.0, 94.5)
+    assert res == ("INR", 1.0)
+
+
+def test_ambiguous_or_missing_inputs_return_none():
+    assert df_mod._infer_factor(None, 1e9, 100.0, 94.5) is None
+    assert df_mod._infer_factor(1e10, 1e9, 100.0, None) is None

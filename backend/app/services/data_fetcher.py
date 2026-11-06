@@ -78,6 +78,54 @@ def _ev_to_ebitda(info: Dict[str, Any]):
     return info.get("enterpriseToEbitda", "N/A")
 
 
+def _latest_value(stmt: Dict[str, Dict[str, float]], items: List[str]) -> Optional[float]:
+    for period in sorted(stmt.keys(), reverse=True):
+        for k in items:
+            v = stmt[period].get(k)
+            if isinstance(v, (int, float)) and v == v:
+                return float(v)
+    return None
+
+
+def _scale_amounts(data: Dict[str, Dict[str, float]], factor: float) -> None:
+    """Multiplies currency amounts in place; share counts and ratios are left unchanged."""
+    for period in data.values():
+        for name in list(period.keys()):
+            if not any(m in name.lower() for m in _NON_CURRENCY_MARKERS):
+                period[name] = period[name] * factor
+
+
+def _infer_factor(revenue: Optional[float], shares: Optional[float], price: Optional[float],
+                  usd_inr: Optional[float]) -> Optional[Tuple[str, float]]:
+    """
+    Decides whether the statements are INR or USD from value-to-revenue plausibility.
+    Market value = price x shares (both in INR). Only one reading is plausible for a listed company.
+    Returns (currency, factor to INR) or None when the evidence is ambiguous.
+    """
+    if not (revenue and shares and price and usd_inr and revenue > 0):
+        return None
+    mcap = price * shares
+    as_inr = mcap / revenue
+    as_usd = mcap / (revenue * usd_inr)
+    plausible = lambda r: 0.5 <= r <= 60.0
+    if plausible(as_inr) and not plausible(as_usd):
+        return ("INR", 1.0)
+    if plausible(as_usd) and not plausible(as_inr):
+        return ("USD", usd_inr)
+    return None
+
+
+def _infer_statement_currency(ticker, income: Dict, balance: Dict) -> Optional[Tuple[str, float]]:
+    rev = _latest_value(income, ["Total Revenue", "Operating Revenue"])
+    shares = _latest_value(balance, ["Ordinary Shares Number", "Share Issued"])
+    try:
+        hist = ticker.history(period="5d", interval="1d", auto_adjust=False)
+        price = float(hist["Close"].dropna().iloc[-1]) if not hist.empty else None
+    except Exception:
+        price = None
+    return _infer_factor(rev, shares, price, get_fx_rate("USDINR=X"))
+
+
 class DataFetcher:
     """
     Resilient data fetcher for Indian equities and macro benchmarks with multi-tier fallbacks.
@@ -444,9 +492,11 @@ class DataFetcher:
         fx = 1.0
         currency_meta = {"reported_currency": None, "display_currency": "INR", "fx_rate": None,
                          "converted": False}
+        info_known = False
         try:
             info = ticker.info or {}
             fin_ccy = info.get("financialCurrency")
+            info_known = bool(fin_ccy)
             quote_ccy = info.get("currency") or "INR"
             currency_meta["reported_currency"] = fin_ccy or quote_ccy
             currency_meta["display_currency"] = quote_ccy
@@ -478,15 +528,30 @@ class DataFetcher:
             return data
 
         try:
-            return {
+            result = {
                 "income_statement": clean_df(ticker.financials),
                 "income_statement_quarterly": clean_df(ticker.quarterly_financials),
                 "balance_sheet": clean_df(ticker.balance_sheet),
                 "balance_sheet_quarterly": clean_df(ticker.quarterly_balance_sheet),
                 "cash_flow": clean_df(ticker.cashflow),
                 "cash_flow_quarterly": clean_df(ticker.quarterly_cashflow),
-                "currency": currency_meta,
             }
+            # Yahoo's company info can be empty (e.g. on some hosts). Then the reporting currency is inferred
+            # from revenue against market value, and any USD figures are converted to INR.
+            if not info_known and sym.upper().endswith((".NS", ".BO")):
+                inferred = _infer_statement_currency(ticker, result["income_statement"], result["balance_sheet"])
+                if inferred:
+                    ccy, factor = inferred
+                    if factor != 1.0:
+                        for key in list(result.keys()):
+                            _scale_amounts(result[key], factor)
+                    currency_meta.update({"reported_currency": ccy, "display_currency": "INR",
+                                          "fx_rate": round(factor, 4) if factor != 1.0 else None,
+                                          "converted": factor != 1.0, "inferred": True})
+                else:
+                    currency_meta.update({"reported_currency": None, "inferred": False})
+            result["currency"] = currency_meta
+            return result
         except Exception as e:
             logger.error(f"Error fetching financial statements for {symbol}: {e}")
             return {
