@@ -1,5 +1,5 @@
 from .session import get_db, init_db, engine, SessionLocal
-from .models import Base, StockMaster, PriceCache, MacroCache, CorporateActionModel, SwingPickModel
+from .models import Base, StockMaster, PriceCache, MacroCache, CorporateActionModel
 
 __all__ = [
     "get_db",
@@ -11,5 +11,4 @@ __all__ = [
     "PriceCache",
     "MacroCache",
     "CorporateActionModel",
-    "SwingPickModel"
 ]

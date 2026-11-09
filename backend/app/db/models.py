@@ -69,29 +69,6 @@ class CorporateActionModel(Base):
     source = Column(String(100), default="NSE")
     last_updated = Column(DateTime, default=datetime.utcnow)
 
-class SwingPickModel(Base):
-    __tablename__ = "swing_picks"
-
-    id = Column(String(60), primary_key=True)
-    symbol = Column(String(30), index=True)
-    company_name = Column(String(200))
-    sector = Column(String(100))
-    setup_type = Column(String(80), index=True)
-    current_price = Column(Float)
-    entry_min = Column(Float)
-    entry_max = Column(Float)
-    stop_loss = Column(Float)
-    target_1 = Column(Float)
-    target_2 = Column(Float)
-    risk_reward = Column(Float)
-    holding_period_days = Column(Integer, default=7)
-    signal_score = Column(Float, default=75.0)
-    profit_plan = Column(Text)
-    why_pick = Column(Text)
-    macro_regime = Column(String(30), default="Risk-On")
-    created_at = Column(DateTime, default=datetime.utcnow)
-    status = Column(String(20), default="ACTIVE") # ACTIVE, TARGET1_HIT, TARGET2_HIT, STOPPED_OUT
-
 class DailyPickModel(Base):
     """One row per IST trading date holding the two-pick research shortlist as JSON."""
     __tablename__ = "daily_picks"

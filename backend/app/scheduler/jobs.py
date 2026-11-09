@@ -1,7 +1,6 @@
 import logging
 from app.db.session import SessionLocal
 from app.services.macro_service import MacroService
-from app.services.swing_service import SwingScanner
 from app.services.daily_picks_service import DailyPicksEngine
 from app.config import settings
 
@@ -17,7 +16,7 @@ except ImportError:
 
 def nightly_price_and_macro_refresh():
     """
-    Nightly background job to refresh macro indicators, regime, and swing setups.
+    Nightly background job to refresh macro indicators and sector data.
     """
     logger.info("🌙 Running nightly BharatStock Analyzer data refresh job...")
     try:
@@ -25,8 +24,6 @@ def nightly_price_and_macro_refresh():
         # Refresh macro indicators
         MacroService.get_market_indicators()
         MacroService.get_sector_rotation_heatmap()
-        # Refresh swing scanner
-        SwingScanner.run_scan(db=db, macro_regime="Risk-On")
         db.close()
         logger.info("✅ Nightly refresh job completed successfully.")
     except Exception as e:

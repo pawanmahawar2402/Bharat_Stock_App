@@ -6,7 +6,7 @@ from app.config import settings
 from app.db.session import init_db, SessionLocal
 from app.services.stock_master import seed_stock_master
 from app.scheduler.jobs import start_scheduler, shutdown_scheduler
-from app.routers import macro, market_pulse, swing_scanner, stock_analysis, daily_picks
+from app.routers import macro, market_pulse, stock_analysis, daily_picks
 
 logging.basicConfig(
     level=logging.INFO,
@@ -51,7 +51,6 @@ app.add_middleware(
 # Register Routers
 app.include_router(macro.router, prefix=settings.API_V1_STR)
 app.include_router(market_pulse.router, prefix=settings.API_V1_STR)
-app.include_router(swing_scanner.router, prefix=settings.API_V1_STR)
 app.include_router(stock_analysis.router, prefix=settings.API_V1_STR)
 app.include_router(daily_picks.router, prefix=settings.API_V1_STR)
 

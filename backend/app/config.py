@@ -21,7 +21,6 @@ class Settings(BaseSettings):
     CACHE_TTL_PRICES: int = 300       # 5 minutes
     CACHE_TTL_MACRO: int = 3600       # 1 hour
     CACHE_TTL_FINANCIALS: int = 86400 # 24 hours
-    CACHE_TTL_SWING: int = 1800       # 30 minutes
     
     # Market-data sources, in priority order (see app/sources/registry.py)
     DATA_SOURCES: str = "yahoo,stock_list,statement_derived"
