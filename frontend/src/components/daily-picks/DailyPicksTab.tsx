@@ -125,7 +125,6 @@ export default function DailyPicksTab() {
                   <th className="p-3 text-left">#</th>
                   <th className="p-3 text-left">Company</th>
                   <th className="p-3 text-left">Sector</th>
-                  <th className="p-3 text-left">Darvas status</th>
                   <th className="p-3 text-right">Score</th>
                   <th className="p-3 text-left">Breakout pattern</th>
                   <th className="p-3 text-right">Box (bottom to top)</th>
@@ -143,10 +142,6 @@ export default function DailyPicksTab() {
                       <div className="text-[11px] text-slate-500">{r.symbol}</div>
                     </td>
                     <td className="p-3 text-xs text-slate-600 dark:text-slate-400">{r.sector}</td>
-                    <td className="p-3 text-xs font-semibold">
-                      {r.darvas_status}
-                      {r.tier !== 'Actionable' && <span className="block text-[10px] font-normal text-slate-500">Not triggered</span>}
-                    </td>
                     <td className="p-3 text-right text-xs">{formatNumber(r.score)}</td>
                     <td className="p-3 text-xs">{r.signal || '—'}</td>
                     <td className="p-3 text-right text-xs">
