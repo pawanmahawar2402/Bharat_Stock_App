@@ -71,7 +71,7 @@ export default function DailyPicksTab() {
   }, [load]);
 
   const result = data?.result;
-  const rows: any[] = result?.top_ten ?? [];
+  const rows: any[] = result?.picks ?? [];
 
   return (
     <div className="space-y-6 pb-12">
@@ -114,10 +114,6 @@ export default function DailyPicksTab() {
 
       {result && rows.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs text-slate-500">
-            Ranked by Darvas box setup: breakouts first, then near-breakouts, then watchlist names that have not triggered yet.
-            {' '}{rows.filter((r: any) => r.tier === 'Actionable').length} actionable, {rows.filter((r: any) => r.tier !== 'Actionable').length} watchlist.
-          </p>
           <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 dark:bg-slate-950 text-xs text-slate-500 uppercase tracking-wider">
@@ -125,9 +121,7 @@ export default function DailyPicksTab() {
                   <th className="p-3 text-left">#</th>
                   <th className="p-3 text-left">Company</th>
                   <th className="p-3 text-left">Sector</th>
-                  <th className="p-3 text-right">Score</th>
                   <th className="p-3 text-left">Breakout pattern</th>
-                  <th className="p-3 text-right">Box (bottom to top)</th>
                   <th className="p-3 text-right">Entry</th>
                   <th className="p-3 text-right">Stop loss</th>
                   <th className="p-3 text-right">Target</th>
@@ -142,11 +136,7 @@ export default function DailyPicksTab() {
                       <div className="text-[11px] text-slate-500">{r.symbol}</div>
                     </td>
                     <td className="p-3 text-xs text-slate-600 dark:text-slate-400">{r.sector}</td>
-                    <td className="p-3 text-right text-xs">{formatNumber(r.score)}</td>
                     <td className="p-3 text-xs">{r.signal || '—'}</td>
-                    <td className="p-3 text-right text-xs">
-                      {r.box_bottom != null && r.box_top != null ? `₹${formatNumber(r.box_bottom)} – ₹${formatNumber(r.box_top)}` : '—'}
-                    </td>
                     <td className="p-3 text-right text-xs">{r.entry != null ? `₹${formatNumber(r.entry)}` : '—'}</td>
                     <td className="p-3 text-right text-xs text-rose-600">{r.stop_loss != null ? `₹${formatNumber(r.stop_loss)}` : '—'}</td>
                     <td className="p-3 text-right text-xs text-emerald-600">{r.target != null ? `₹${formatNumber(r.target)}` : '—'}</td>
@@ -160,7 +150,7 @@ export default function DailyPicksTab() {
 
       {result && rows.length === 0 && (
         <div className="p-6 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-sm text-slate-500">
-          No Darvas setups today. Click “Update picks” to refresh.
+          No picks today. Click “Update picks” to refresh.
         </div>
       )}
 
