@@ -169,6 +169,58 @@ def score_darvas(d: Dict[str, Any], trend_ok: bool, rs_1m_vs_nifty: Optional[flo
     return round(base + (10.0 if trend_ok else 0.0), 1)
 
 
+MIN_MOMENTUM_TESTS = 3               # of the four strength tests, at least this many must pass
+MIN_MARKET_CAP_INR = 1000 * 1e7      # Rs 1,000 crore
+MIN_AVG_VOLUME_SHARES = 100_000      # more than 1 lakh shares a day
+NEAR_52W_HIGH_PCT = 0.10             # within 10% of the 52-week high
+MIN_MULTIPLE_OF_52W_LOW = 2.0        # at least 2x the 52-week low
+
+
+def momentum_checks(df: pd.DataFrame, market_cap_inr: Optional[float]) -> Optional[Dict[str, Any]]:
+    """
+    The four strength tests, each evaluated separately:
+      near_52w_high : last close within 10% of the 52-week high
+      twice_52w_low : last close at least 2x the 52-week low
+      liquid        : average daily volume above 1 lakh shares
+      large_cap     : market capitalisation above Rs 1,000 crore
+    Returns each test's result and the number passed (0-4), or None when there is too little data.
+    """
+    if df is None or df.empty or len(df) < 60:
+        return None
+    window = df.tail(252)
+    last = float(df["Close"].iloc[-1])
+    high52 = float(window["High"].max())
+    low52 = float(window["Low"].min())
+    avg_vol = float(df["Volume"].tail(20).mean()) if "Volume" in df.columns else 0.0
+    checks = {
+        "near_52w_high": last >= (1 - NEAR_52W_HIGH_PCT) * high52,
+        "twice_52w_low": low52 > 0 and last >= MIN_MULTIPLE_OF_52W_LOW * low52,
+        "liquid": avg_vol >= MIN_AVG_VOLUME_SHARES,
+        "large_cap": bool(market_cap_inr) and market_cap_inr >= MIN_MARKET_CAP_INR,
+    }
+    checks["passed"] = sum(1 for k in ("near_52w_high", "twice_52w_low", "liquid", "large_cap") if checks[k])
+    checks["last"] = last
+    checks["high_52w"] = high52
+    checks["low_52w"] = low52
+    return checks
+
+
+def momentum_screen(df: pd.DataFrame, market_cap_inr: Optional[float]) -> Optional[Dict[str, Any]]:
+    """True only when all four strength tests pass."""
+    checks = momentum_checks(df, market_cap_inr)
+    return checks if checks and checks["passed"] == 4 else None
+
+
+def _market_cap_inr(symbol: str) -> Optional[float]:
+    """Market capitalisation from Yahoo's quick quote (lightweight, works where the full profile does not)."""
+    try:
+        import yfinance as yf
+        value = yf.Ticker(symbol).fast_info["market_cap"]
+        return float(value) if value else None
+    except Exception:
+        return None
+
+
 class DarvasScanner:
     @staticmethod
     def analyse(symbol: str, nifty_1m: Optional[float], history_loader=None) -> Optional[Dict[str, Any]]:
@@ -178,8 +230,8 @@ class DarvasScanner:
             return None
         close = df["Close"]
         last = float(close.iloc[-1])
-        turnover = float(df["Volume"].tail(20).mean() * last) if "Volume" in df.columns else 0.0
-        if turnover < MIN_DAILY_TRADED_VALUE_INR:
+        checks = momentum_checks(df, _market_cap_inr(symbol))
+        if checks is None or checks["passed"] < MIN_MOMENTUM_TESTS:
             return None
         sma200 = float(close.rolling(200).mean().iloc[-1]) if len(close) >= 200 else float(close.mean())
         trend_ok = last > sma200
@@ -205,7 +257,8 @@ class DarvasScanner:
             "status": box["status"],
             "signal": _chart_breakout_signal(df),
             "tier": "Actionable" if box["status"] in ("Breakout", "Near breakout") else "Watchlist (not triggered)",
-            "score": score_darvas(box, trend_ok, rs),
+            "score": score_darvas(box, trend_ok, rs) + 25.0 * checks["passed"],
+            "momentum_tests_passed": checks["passed"],
             "trend_above_200dma": trend_ok,
             "box": box,
             "plan": plan,

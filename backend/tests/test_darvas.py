@@ -77,3 +77,27 @@ def test_no_box_in_pure_noise_downtrend_returns_none_or_not_actionable():
 
 def test_short_history_returns_none():
     assert find_darvas_box(_frame(_ramp(10))) is None
+
+
+def _strong_stock(n=260, start=50.0, step=0.4, volume=300_000):
+    idx = pd.bdate_range("2024-01-01", periods=n)
+    closes = np.array([start + i * step for i in range(n)])
+    df = pd.DataFrame({"Open": closes, "High": closes + 0.5, "Low": closes - 0.5,
+                       "Close": closes, "Volume": float(volume)}, index=idx)
+    return df
+
+
+def test_momentum_screen_passes_strong_liquid_large_cap():
+    from app.services.darvas_service import momentum_screen
+    res = momentum_screen(_strong_stock(), market_cap_inr=5000 * 1e7)
+    assert res is not None and res["passed"] == 4
+
+
+def test_momentum_screen_rejects_far_from_high_small_cap_or_illiquid():
+    from app.services.darvas_service import momentum_screen
+    df = _strong_stock()
+    assert momentum_screen(df, market_cap_inr=500 * 1e7) is None            # below Rs 1,000 Cr
+    assert momentum_screen(_strong_stock(volume=50_000), market_cap_inr=5000 * 1e7) is None  # thin volume
+    fallen = df.copy()
+    fallen.iloc[-1, fallen.columns.get_loc("Close")] = 60.0                 # far below the 52-week high
+    assert momentum_screen(fallen, market_cap_inr=5000 * 1e7) is None

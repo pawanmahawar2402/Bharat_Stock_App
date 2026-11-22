@@ -178,7 +178,7 @@ class DataFetcher:
         """
         sym = DataFetcher.normalize_symbol(symbol)
         try:
-            ticker = yf.Ticker(sym, session=get_session())
+            ticker = yf.Ticker(sym)
             df = ticker.history(period=period, interval=interval, auto_adjust=False)
 
             if df is None or df.empty:
@@ -263,8 +263,7 @@ class DataFetcher:
                         "is_cached": True
                     }
 
-        session = get_session()
-        ticker = yf.Ticker(sym, session=session)
+        ticker = yf.Ticker(sym)
         
         info = {}
         fast_info = {}
@@ -485,7 +484,7 @@ class DataFetcher:
         Fetches Income Statement, Balance Sheet, and Cash Flow Statement (Annual & Quarterly).
         """
         sym = DataFetcher.normalize_symbol(symbol)
-        ticker = yf.Ticker(sym, session=get_session())
+        ticker = yf.Ticker(sym)
 
         # Statements can be reported in a different currency from the share price (e.g. Infosys
         # reports in USD while trading in INR). Convert amounts so every figure is in the quote currency.

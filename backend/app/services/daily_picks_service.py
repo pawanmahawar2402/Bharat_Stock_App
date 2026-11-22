@@ -6,6 +6,7 @@ Only the ranked names and their trade levels are stored and returned.
 import json
 import logging
 import threading
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
@@ -27,6 +28,15 @@ DISCLAIMER = "Model-generated research shortlist for education. Not SEBI-registe
 
 def ist_today() -> str:
     return datetime.now(IST).strftime("%Y-%m-%d")
+
+
+def _history_with_retry(reg: SourceRegistry, symbol: str):
+    """One retry after a short pause, since Yahoo rate-limits bursts of requests."""
+    df = reg.history(symbol, "1y", "1d")
+    if df is None or df.empty:
+        time.sleep(8)
+        df = reg.history(symbol, "1y", "1d")
+    return df
 
 
 def _pick_rows(scan: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -77,7 +87,9 @@ class DailyPicksEngine:
             market_inds = MacroService.get_market_indicators()
             nifty_1m = next((m.get("change_1m_pct") for m in market_inds if m.get("name") == "Nifty 50"), None)
             reg = SourceRegistry.from_settings()
-            scan = DarvasScanner.scan(universe, nifty_1m, history_loader=lambda s: reg.history(s, "1y", "1d"))
+            # 3 parallel requests: Yahoo rate-limits heavier bursts and returns no data for the rest
+            scan = DarvasScanner.scan(universe, nifty_1m, workers=3,
+                                      history_loader=lambda s: _history_with_retry(reg, s))
 
             payload = {
                 "date": ist_today(),
