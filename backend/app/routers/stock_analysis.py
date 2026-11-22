@@ -12,6 +12,7 @@ from app.services.macro_service import MacroService
 from app.services.data_fetcher import DataFetcher
 from app.sources.registry import SourceRegistry
 from app.services.valuation_service import ValuationEngine
+from app.services.peer_multiples import peers_for
 from app.services.technical_service import TechnicalEngine
 from app.services.market_pulse_service import MarketPulseService
 from app.services.macro_service import MacroService
@@ -57,7 +58,7 @@ def get_stock_overview(symbol: str, db: Session = Depends(get_db)) -> Dict[str, 
     
     # Financials for valuation
     financials = DataFetcher.fetch_financial_statements(norm_sym)
-    val_summary = ValuationEngine.calculate_valuation_summary(fundamentals, financials)
+    val_summary = ValuationEngine.calculate_valuation_summary(fundamentals, financials, peers_for(db, norm_sym, _num_mc(fundamentals)))
     
     # Technical rating
     df = DataFetcher.fetch_history(norm_sym, period="6mo", interval="1d")
@@ -120,7 +121,7 @@ def get_stock_valuation(symbol: str, db: Session = Depends(get_db)) -> Dict[str,
     # Source layer: fills missing ratios (P/E, P/B, EPS, book value) from statements when a quote source omits them
     fundamentals = SourceRegistry.from_settings().fundamentals(norm_sym)
     financials = DataFetcher.fetch_financial_statements(norm_sym)
-    return ValuationEngine.calculate_valuation_summary(fundamentals, financials)
+    return ValuationEngine.calculate_valuation_summary(fundamentals, financials, peers_for(db, norm_sym, _num_mc(fundamentals)))
 
 @router.post("/dcf-recalculate")
 def recalculate_dcf(payload: DCFSimRequest) -> Dict[str, Any]:
@@ -208,3 +209,11 @@ def get_stock_peers(symbol: str, db: Session = Depends(get_db)) -> List[Dict[str
         except Exception:
             continue
     return peer_results
+
+
+def _num_mc(fund):
+    try:
+        v = float(fund.get("market_cap"))
+        return v if v == v and v > 0 else None
+    except (TypeError, ValueError):
+        return None

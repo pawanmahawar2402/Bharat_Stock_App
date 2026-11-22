@@ -16,7 +16,8 @@ def test_known_stocks_sanity(symbol):
     # Valuation summary
     val = ValuationEngine.calculate_valuation_summary(fundamentals, financials)
     assert "blended_intrinsic_value" in val
-    assert val["blended_intrinsic_value"] > 0
+    # Either a positive value, or an explicit "not applicable" when comparables are insufficient
+    assert (val["blended_intrinsic_value"] or 0) > 0 or val["is_applicable"] is False
     assert "valuation_label" in val
     assert "quality_scorecard" in val
 

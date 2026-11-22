@@ -216,12 +216,13 @@ class ValuationEngine:
 
     @staticmethod
     def calculate_valuation_summary(fundamentals: Dict[str, Any], financials: Dict[str, Any],
-                                    peer_ev_ebitda: Optional[float] = None) -> Dict[str, Any]:
+                                    peers: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Research valuation: one method per company (see fundamental_engine.run_valuation).
         Response keeps the keys the frontend already consumes.
         """
-        res = fe.run_valuation(fundamentals, financials, peer_ev_ebitda=peer_ev_ebitda)
+        from app.services.valuation_selector import value_company
+        res = value_company(fundamentals, financials, peers)
         quality = ValuationEngine.compute_quality_scorecard(fundamentals, financials)
         cmp = res.get("current_price", 0.0)
         inputs = res.get("inputs", {})

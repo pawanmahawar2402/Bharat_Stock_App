@@ -224,31 +224,6 @@ def triangulate(valuation: Dict[str, Any], technical_score: float, quality_score
     }
 
 
-def peer_median_ev_ebitda(sector: Optional[str], db: Session, exclude_symbol: str, limit: int = 5) -> Optional[float]:
-    """Live median EV/EBITDA of up to `limit` same-sector stocks from the stock master."""
-    if not sector or sector == "Diversified":
-        return None
-    peers = (db.query(StockMaster)
-             .filter(StockMaster.sector == sector, StockMaster.symbol != exclude_symbol)
-             .limit(limit * 2).all())
-    multiples = []
-    for p in peers:
-        if len(multiples) >= limit:
-            break
-        try:
-            q = DataFetcher.fetch_quote_and_fundamentals(p.symbol)
-            m = fe.num(q.get("enterprise_to_ebitda"))
-            if m is not None and 3.0 <= m <= 60.0:
-                multiples.append(m)
-        except Exception as e:
-            logger.debug(f"Peer multiple failed for {p.symbol}: {e}")
-    if len(multiples) < 2:
-        return None
-    multiples.sort()
-    mid = len(multiples) // 2
-    return round(multiples[mid] if len(multiples) % 2 else (multiples[mid - 1] + multiples[mid]) / 2, 2)
-
-
 def build_research_note(symbol: str, db: Optional[Session] = None, market_inds: Optional[List[Dict[str, Any]]] = None,
                         regime: Optional[str] = None) -> Dict[str, Any]:
     """Full single-company research note: valuation, technicals, macro sentiment and triangulated verdict."""
@@ -257,13 +232,10 @@ def build_research_note(symbol: str, db: Optional[Session] = None, market_inds: 
     fund, fin = reg.fundamentals_with_statements(norm)
     fin = fin or {}
 
-    # Peer group comes from the stock master (same labelling as the peer endpoint), not Yahoo's sector
-    peer_mult = None
-    if db is not None:
-        master = db.query(StockMaster).filter(StockMaster.symbol == norm).first()
-        group = master.sector if master and master.sector else None
-        peer_mult = peer_median_ev_ebitda(group, db, norm)
-    val = ValuationEngine.calculate_valuation_summary(fund, fin, peer_ev_ebitda=peer_mult)
+    from app.services.peer_multiples import peers_for
+    peers = peers_for(db, norm, _num_mc(fund)) if db is not None else {}
+    peer_mult = peers.get("ev_ebitda")
+    val = ValuationEngine.calculate_valuation_summary(fund, fin, peers)
 
     df = reg.history(norm, period="1y", interval="1d")
     tech = TechnicalEngine.analyze(df) if not df.empty else {"status": "error", "message": "No price history"}
@@ -298,3 +270,11 @@ def build_research_note(symbol: str, db: Optional[Session] = None, market_inds: 
         "triangulation": tri,
         "disclaimer": "Analytical research output for education. Not SEBI-registered investment advice.",
     }
+
+
+def _num_mc(fund):
+    try:
+        v = float(fund.get("market_cap"))
+        return v if v == v and v > 0 else None
+    except (TypeError, ValueError):
+        return None
