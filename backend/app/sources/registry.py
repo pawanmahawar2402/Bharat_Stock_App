@@ -15,6 +15,7 @@ from app.config import settings
 from app.sources.base import DataSource
 from app.sources.statement_source import StatementDerivedSource
 from app.sources.stock_list_source import StockListSource
+from app.sources.beta_source import HistoryBetaSource
 from app.sources.yahoo_source import YahooSource
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ AVAILABLE_SOURCES = {
     "yahoo": YahooSource,
     "statement_derived": StatementDerivedSource,
     "stock_list": StockListSource,
+    "history_beta": HistoryBetaSource,
 }
 
 

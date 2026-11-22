@@ -461,7 +461,7 @@ export default function StockAnalysisTab({
                     <span className="text-base font-bold text-slate-900 dark:text-white mt-1 block">
                       {formatNumber(overview.fundamentals?.trailing_pe)}x
                     </span>
-                    <span className="text-[10px] text-slate-400">Forward P/E: {formatNumber(overview.fundamentals?.forward_pe)}x</span>
+                    <span className="text-[10px] text-slate-400" title={valuation?.valuation_multiples?.forward_pe_basis ?? ""}>Forward P/E (est.): {formatNumber(valuation?.valuation_multiples?.forward_pe)}x</span>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
                     <span className="text-slate-500 block">Price to Book (P/B)</span>

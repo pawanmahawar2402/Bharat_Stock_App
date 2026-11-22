@@ -46,6 +46,35 @@ class StatementDerivedSource(DataSource):
         debt = _latest(stmts.get("balance_sheet"), "Total Debt")
 
         out: Dict[str, Any] = {}
+        # Market and cash-flow measures derived from the statements and the current price
+        revenue = _latest(stmts.get("income_statement"), "Total Revenue") or _latest(stmts.get("income_statement"), "Operating Revenue")
+        ebitda = _latest(stmts.get("income_statement"), "EBITDA") or _latest(stmts.get("income_statement"), "Normalized EBITDA")
+        cfo = _latest(stmts.get("cash_flow"), "Operating Cash Flow")
+        capex = _latest(stmts.get("cash_flow"), "Capital Expenditure")
+        dividends = _latest(stmts.get("cash_flow"), "Cash Dividends Paid")
+        cash = _latest(stmts.get("balance_sheet"), "Cash Cash Equivalents And Short Term Investments") or _latest(stmts.get("balance_sheet"), "Cash And Cash Equivalents")
+        minority = _latest(stmts.get("balance_sheet"), "Minority Interest") or 0.0
+        if price:
+            mcap = price * shares
+            out["market_cap"] = round(mcap, 0)
+            if revenue and revenue > 0:
+                out["price_to_sales"] = round(mcap / revenue, 2)
+                out["revenue"] = revenue
+            if ebitda is not None:
+                out["ebitda"] = ebitda
+            if debt is not None:
+                ev = mcap + debt - (cash or 0.0) + minority
+                out["enterprise_value"] = round(ev, 0)
+                if ebitda and ebitda > 0:
+                    out["enterprise_to_ebitda"] = round(ev / ebitda, 2)
+                if revenue and revenue > 0:
+                    out["enterprise_to_revenue"] = round(ev / revenue, 2)
+            if cfo is not None:
+                out["operating_cashflow"] = cfo
+                if capex is not None:
+                    out["free_cashflow"] = cfo + capex   # capex is reported negative
+            if dividends is not None and mcap > 0:
+                out["dividend_yield"] = round(abs(dividends) / mcap * 100, 2)   # percent, as Yahoo reports it
         if ni is not None:
             eps = ni / shares
             out["eps_trailing"] = round(eps, 2)

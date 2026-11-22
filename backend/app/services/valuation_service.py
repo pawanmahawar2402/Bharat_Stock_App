@@ -259,6 +259,17 @@ class ValuationEngine:
             ev_to_ebitda_final = round(ev_cr_final / (ebitda_raw / 1e7), 2)
         if res.get("is_financial_institution"):
             ev_cr_final, ev_to_ebitda_final = None, None
+        revenue_cr = (c0.get("revenue") or 0) / 1e7 or None
+        ev_to_sales = round(ev_cr_final / revenue_cr, 2) if (ev_cr_final and revenue_cr and not res.get("is_financial_institution")) else None
+        # Forward P/E is an estimate: trailing EPS grown at the company's revenue growth (not a consensus forecast)
+        fwd_pe, fwd_basis = None, None
+        eps_now = fe.num(fundamentals.get("eps_trailing"))
+        revs = [h["revenue"] for h in hist if h.get("revenue") and h["revenue"] > 0]
+        price_now = fe.num(fundamentals.get("current_price"))
+        if eps_now and eps_now > 0 and price_now and len(revs) >= 2:
+            g = (revs[0] / revs[-1]) ** (1 / (len(revs) - 1)) - 1
+            fwd_pe = round(price_now / (eps_now * (1 + g)), 2)
+            fwd_basis = "Estimate: trailing EPS grown at historical revenue growth"
         fcff_block = cross.get("FCFF", {})
         legacy_dcf = {
             "method": "FCFF DCF (statement-based)",
@@ -301,7 +312,9 @@ class ValuationEngine:
                 "enterprise_value_cr": ev_cr_final,
                 "ebitda_cr": to_cr(ebitda_raw),
                 "ev_to_ebitda": ev_to_ebitda_final if ev_to_ebitda_final is not None else "N/A",
-                "ev_to_sales": fundamentals.get("enterprise_to_revenue", "N/A"),
+                "ev_to_sales": ev_to_sales if ev_to_sales is not None else "N/A",
+                "forward_pe": fwd_pe if fwd_pe is not None else "N/A",
+                "forward_pe_basis": fwd_basis,
                 "operating_cash_flow_cr": cfo_cr,
                 "capex_cr": capex_cr,
                 "fcff_cr": fcff_cr,
