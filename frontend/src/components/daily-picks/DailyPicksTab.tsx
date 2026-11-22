@@ -149,8 +149,11 @@ export default function DailyPicksTab() {
       )}
 
       {result && rows.length === 0 && (
-        <div className="p-6 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-sm text-slate-500">
-          No picks today. Click “Update picks” to refresh.
+        <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-center space-y-2">
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No stock met every screening rule in today’s screen.</p>
+          <p className="text-xs text-slate-500">
+            Screened on {new Date(result.generated_at).toLocaleString('en-IN')}. The list refreshes after each run; click “Update picks” to run the screen again.
+          </p>
         </div>
       )}
 
