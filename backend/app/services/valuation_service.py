@@ -242,18 +242,17 @@ class ValuationEngine:
         fcf_yield = round((fcfe_cr / mcap_cr) * 100, 2) if fcfe_cr and mcap_cr > 0 else None
         price_to_fcf = round(mcap_cr / fcfe_cr, 2) if fcfe_cr and fcfe_cr > 0 else "N/A"
 
-        ev_raw = fe.num(fundamentals.get("enterprise_value"))
         ebitda_raw = c0.get("ebitda")
+        # Enterprise value from the statements: Market Cap + Total Debt + Preferred Stock + Minority Interest - Cash
+        bs_latest = fe.StatementView(financials.get("balance_sheet")) if financials else None
+        preferred_cr = ((bs_latest.get(["Preferred Stock", "Preferred Stock Equity"]) or 0.0) / 1e7) if bs_latest else 0.0
         # Enterprise value from market cap and the balance sheet when the quote source omits it
         inp = res.get("inputs", {})
         mc_cr = (fe.num(fundamentals.get("market_cap")) or 0) / 1e7
-        ev_cr_calc = None
+        ev_cr_final = None
         if mc_cr and inp.get("total_debt_cr") is not None:
-            ev_cr_calc = mc_cr + inp.get("total_debt_cr", 0) - inp.get("cash_cr", 0) + inp.get("minority_interest_cr", 0)
-        if ev_raw:
-            ev_cr_final = round(ev_raw / 1e7, 2)
-        else:
-            ev_cr_final = round(ev_cr_calc, 2) if ev_cr_calc else None
+            ev_cr_final = round(mc_cr + inp.get("total_debt_cr", 0) + preferred_cr
+                                + inp.get("minority_interest_cr", 0) - inp.get("cash_cr", 0), 2)
         ev_to_ebitda_final = fe.num(fundamentals.get("enterprise_to_ebitda"))
         if ev_to_ebitda_final is None and ev_cr_final and ebitda_raw and ebitda_raw > 0 and not res.get("is_financial_institution"):
             ev_to_ebitda_final = round(ev_cr_final / (ebitda_raw / 1e7), 2)

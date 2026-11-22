@@ -100,7 +100,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-6 bg-white dark:bg-slate-900 text-center text-xs text-slate-500">
-        <p>BharatStock Analyzer © 2024 • Institutional Indian Equity Analytics Platform • <a href="https://pawanstockrecommendations.com" className="underline hover:text-slate-700 dark:hover:text-slate-300" target="_blank" rel="noopener noreferrer">pawanstockrecommendations.com</a></p>
+        <p>Grow stocks with Pawan © 2026 • Indian Equity Analytics • <a href="https://pawanstockrecommendations.com" className="underline hover:text-slate-700 dark:hover:text-slate-300" target="_blank" rel="noopener noreferrer">pawanstockrecommendations.com</a></p>
         <p className="mt-1 text-[11px] text-slate-400">
           Powered by FastAPI, Yahoo Finance, NSE/BSE Feeds, and Next.js. Strictly for educational & research purposes.
         </p>

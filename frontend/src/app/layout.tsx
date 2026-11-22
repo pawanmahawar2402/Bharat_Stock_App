@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'BharatStock Analyzer - Institutional Indian Stock Market Intelligence',
+  title: 'Grow stocks with Pawan',
   description: 'Full-stack institutional stock market analytics platform for NSE/BSE equities with Macro Regime Modeling, Corporate Actions Tracker, Swing Profit-Booking Scanner, and intrinsic value suite.',
 };
 

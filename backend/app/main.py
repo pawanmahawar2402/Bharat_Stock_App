@@ -16,7 +16,7 @@ logger = logging.getLogger("bharatstock")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🚀 Starting BharatStock Analyzer Backend...")
+    logger.info("🚀 Starting Grow stocks with Pawan backend...")
     # Initialize SQLite tables
     init_db()
     # Seed 500+ NSE stocks
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     # Start scheduler
     start_scheduler()
     yield
-    logger.info("🛑 Shutting down BharatStock Analyzer Backend...")
+    logger.info("🛑 Shutting down Grow stocks with Pawan backend...")
     shutdown_scheduler()
 
 app = FastAPI(

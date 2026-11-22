@@ -54,6 +54,7 @@ class StatementDerivedSource(DataSource):
         dividends = _latest(stmts.get("cash_flow"), "Cash Dividends Paid")
         cash = _latest(stmts.get("balance_sheet"), "Cash Cash Equivalents And Short Term Investments") or _latest(stmts.get("balance_sheet"), "Cash And Cash Equivalents")
         minority = _latest(stmts.get("balance_sheet"), "Minority Interest") or 0.0
+        preferred = _latest(stmts.get("balance_sheet"), "Preferred Stock") or _latest(stmts.get("balance_sheet"), "Preferred Stock Equity") or 0.0
         if price:
             mcap = price * shares
             out["market_cap"] = round(mcap, 0)
@@ -63,7 +64,7 @@ class StatementDerivedSource(DataSource):
             if ebitda is not None:
                 out["ebitda"] = ebitda
             if debt is not None:
-                ev = mcap + debt - (cash or 0.0) + minority
+                ev = mcap + debt + preferred + minority - (cash or 0.0)   # EV = Market Cap + Debt + Preferred + Minority - Cash
                 out["enterprise_value"] = round(ev, 0)
                 if ebitda and ebitda > 0:
                     out["enterprise_to_ebitda"] = round(ev / ebitda, 2)

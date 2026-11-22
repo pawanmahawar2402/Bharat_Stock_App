@@ -1,4 +1,4 @@
-# 🇮🇳 BharatStock Analyzer
+# 🇮🇳 Grow stocks with Pawan
 
 An institutional-grade stock market analytics platform tailored for Indian Equities (NSE/BSE). Powered by **FastAPI**, **Yahoo Finance**, official macroeconomic feeds (RBI, MOSPI, FRED, NSE), and **Next.js 14** with TradingView Lightweight Charts.
 
@@ -112,7 +112,7 @@ pytest tests -v
 ---
 
 ## ⚖️ Legal & SEBI Disclaimer
-BharatStock Analyzer is an analytical and educational research software tool. It is **not** an investment advisory service or a SEBI-registered recommendation. Market data from Yahoo Finance and free public APIs may be delayed or approximate. Short-term swing setups involve capital risk. Always conduct your own research or consult a registered financial advisor before investing.
+Grow stocks with Pawan is an analytical and educational research software tool. It is **not** an investment advisory service or a SEBI-registered recommendation. Market data from Yahoo Finance and free public APIs may be delayed or approximate. Short-term swing setups involve capital risk. Always conduct your own research or consult a registered financial advisor before investing.
 ---
 
 ## 🧮 Research Methodology (v2)

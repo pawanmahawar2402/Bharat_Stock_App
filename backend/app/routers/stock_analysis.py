@@ -59,6 +59,13 @@ def get_stock_overview(symbol: str, db: Session = Depends(get_db)) -> Dict[str, 
     # Financials for valuation
     financials = DataFetcher.fetch_financial_statements(norm_sym)
     val_summary = ValuationEngine.calculate_valuation_summary(fundamentals, financials, peers_for(db, norm_sym, _num_mc(fundamentals)))
+    # Show the same enterprise value the valuation uses (statement-based formula)
+    ev_cr = (val_summary.get("valuation_multiples") or {}).get("enterprise_value_cr")
+    if ev_cr:
+        fundamentals["enterprise_value"] = ev_cr * 1e7
+        ev_mult = (val_summary.get("valuation_multiples") or {}).get("ev_to_ebitda")
+        if isinstance(ev_mult, (int, float)):
+            fundamentals["enterprise_to_ebitda"] = ev_mult
     
     # Technical rating
     df = DataFetcher.fetch_history(norm_sym, period="6mo", interval="1d")

@@ -7,7 +7,7 @@ export default function DisclaimerBanner() {
       <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
         <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-500" />
         <span>
-          <strong>SEBI Compliance / Educational Disclaimer:</strong> BharatStock Analyzer is an analytical and educational research tool. It is <strong>not</strong> an investment advisory service or SEBI-registered recommendation. Market data from Yahoo Finance and free public APIs may be delayed or approximate. Short-term swing setups involve capital risk.
+          <strong>SEBI Compliance / Educational Disclaimer:</strong> Grow stocks with Pawan is an analytical and educational research tool. It is <strong>not</strong> an investment advisory service or SEBI-registered recommendation. Market data from Yahoo Finance and free public APIs may be delayed or approximate. Short-term swing setups involve capital risk.
         </span>
       </div>
     </div>

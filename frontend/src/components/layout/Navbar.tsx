@@ -37,7 +37,7 @@ export default function Navbar({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-amber-600 via-indigo-600 to-emerald-600 bg-clip-text text-transparent">
-                  BharatStock
+                  Grow stocks with Pawan
                 </span>
                 <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                   Analyzer v1.0
