@@ -188,7 +188,7 @@ def get_stock_peers(symbol: str, db: Session = Depends(get_db)) -> List[Dict[str
     rows = []
     for p in top_peers_by_market_cap(db, norm_sym, limit=10):
         try:
-            q = DataFetcher.fetch_quote_and_fundamentals(p["symbol"])
+            q = SourceRegistry.from_settings().fundamentals(p["symbol"])
         except Exception:
             q = {}
         rows.append({

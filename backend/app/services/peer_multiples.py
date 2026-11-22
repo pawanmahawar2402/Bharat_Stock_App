@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.db.models import StockMaster
 from app.services.data_fetcher import DataFetcher
 from app.services.ttl_cache import ttl_cache
+from app.sources.registry import SourceRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,8 @@ def multiples_for(symbols: Tuple[str, ...], market_cap_inr: Optional[float] = No
     values: Dict[str, List[float]] = {k: [] for k in BOUNDS}
     for sym in symbols:
         try:
-            f = DataFetcher.fetch_quote_and_fundamentals(sym)
+            # Same source chain as the company itself, so peers keep their statement-derived ratios
+            f = SourceRegistry.from_settings().fundamentals(sym)
         except Exception as e:
             logger.debug(f"peer fetch failed for {sym}: {e}")
             continue
