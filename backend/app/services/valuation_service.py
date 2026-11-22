@@ -244,6 +244,21 @@ class ValuationEngine:
 
         ev_raw = fe.num(fundamentals.get("enterprise_value"))
         ebitda_raw = c0.get("ebitda")
+        # Enterprise value from market cap and the balance sheet when the quote source omits it
+        inp = res.get("inputs", {})
+        mc_cr = (fe.num(fundamentals.get("market_cap")) or 0) / 1e7
+        ev_cr_calc = None
+        if mc_cr and inp.get("total_debt_cr") is not None:
+            ev_cr_calc = mc_cr + inp.get("total_debt_cr", 0) - inp.get("cash_cr", 0) + inp.get("minority_interest_cr", 0)
+        if ev_raw:
+            ev_cr_final = round(ev_raw / 1e7, 2)
+        else:
+            ev_cr_final = round(ev_cr_calc, 2) if ev_cr_calc else None
+        ev_to_ebitda_final = fe.num(fundamentals.get("enterprise_to_ebitda"))
+        if ev_to_ebitda_final is None and ev_cr_final and ebitda_raw and ebitda_raw > 0 and not res.get("is_financial_institution"):
+            ev_to_ebitda_final = round(ev_cr_final / (ebitda_raw / 1e7), 2)
+        if res.get("is_financial_institution"):
+            ev_cr_final, ev_to_ebitda_final = None, None
         fcff_block = cross.get("FCFF", {})
         legacy_dcf = {
             "method": "FCFF DCF (statement-based)",
@@ -283,9 +298,9 @@ class ValuationEngine:
             "bank_model": cross.get("P_B_ROE", {}),
             "earnings_model": {"fair_pe_multiple": None, "fair_value": None},
             "valuation_multiples": {
-                "enterprise_value_cr": round(ev_raw / 1e7, 2) if ev_raw else None,
+                "enterprise_value_cr": ev_cr_final,
                 "ebitda_cr": to_cr(ebitda_raw),
-                "ev_to_ebitda": fundamentals.get("enterprise_to_ebitda", "N/A"),
+                "ev_to_ebitda": ev_to_ebitda_final if ev_to_ebitda_final is not None else "N/A",
                 "ev_to_sales": fundamentals.get("enterprise_to_revenue", "N/A"),
                 "operating_cash_flow_cr": cfo_cr,
                 "capex_cr": capex_cr,

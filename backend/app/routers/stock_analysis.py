@@ -12,7 +12,7 @@ from app.services.macro_service import MacroService
 from app.services.data_fetcher import DataFetcher
 from app.sources.registry import SourceRegistry
 from app.services.valuation_service import ValuationEngine
-from app.services.peer_multiples import peers_for
+from app.services.peer_multiples import peers_for, top_peers_by_market_cap
 from app.services.technical_service import TechnicalEngine
 from app.services.market_pulse_service import MarketPulseService
 from app.services.macro_service import MacroService
@@ -176,39 +176,28 @@ def get_stock_financials(symbol: str) -> Dict[str, Any]:
 @router.get("/peers/{symbol}")
 @ttl_cache(settings.CACHE_TTL_PRICES)
 def get_stock_peers(symbol: str, db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
+    """Top 10 companies in the same sector by market capitalisation, with their key multiples."""
     norm_sym = DataFetcher.normalize_symbol(symbol)
-    stock_info = get_stock_by_symbol(norm_sym, db)
-    sector = stock_info.sector if stock_info else "Diversified"
-
-    # Find other stocks in same sector
-    peers = db.query(StockMaster).filter(
-        StockMaster.sector == sector,
-        StockMaster.symbol != norm_sym
-    ).limit(5).all()
-
-    if not peers:
-        # Fallback peers
-        peers = db.query(StockMaster).filter(StockMaster.symbol != norm_sym).limit(4).all()
-
-    peer_results = []
-    for p in peers:
+    rows = []
+    for p in top_peers_by_market_cap(db, norm_sym, limit=10):
         try:
-            q = DataFetcher.fetch_quote_and_fundamentals(p.symbol, db=db)
-            peer_results.append({
-                "symbol": p.symbol,
-                "name": p.name,
-                "price": q.get("current_price"),
-                "change_1d_pct": q.get("change_1d_pct"),
-                "trailing_pe": q.get("trailing_pe"),
-                "price_to_book": q.get("price_to_book"),
-                "ev_to_ebitda": q.get("enterprise_to_ebitda"),
-                "return_on_equity": q.get("return_on_equity"),
-                "market_cap_cr": round(q.get("market_cap", 0) / 1e7, 2),
-                "change_1y_pct": q.get("change_1y_pct")
-            })
+            q = DataFetcher.fetch_quote_and_fundamentals(p["symbol"])
         except Exception:
-            continue
-    return peer_results
+            q = {}
+        rows.append({
+            "symbol": p["symbol"],
+            "name": q.get("company_name") or p["name"],
+            "is_selected": p["is_selected"],
+            "market_cap_cr": round(p["market_cap_inr"] / 1e7, 2),
+            "price": q.get("current_price"),
+            "change_1d_pct": q.get("change_1d_pct"),
+            "trailing_pe": q.get("trailing_pe"),
+            "price_to_book": q.get("price_to_book"),
+            "ev_to_ebitda": q.get("enterprise_to_ebitda"),
+            "return_on_equity": q.get("return_on_equity"),
+            "change_1y_pct": q.get("change_1y_pct"),
+        })
+    return rows
 
 
 def _num_mc(fund):

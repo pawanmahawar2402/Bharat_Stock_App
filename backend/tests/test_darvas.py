@@ -82,22 +82,34 @@ def test_short_history_returns_none():
 def _strong_stock(n=260, start=50.0, step=0.4, volume=300_000):
     idx = pd.bdate_range("2024-01-01", periods=n)
     closes = np.array([start + i * step for i in range(n)])
-    df = pd.DataFrame({"Open": closes, "High": closes + 0.5, "Low": closes - 0.5,
-                       "Close": closes, "Volume": float(volume)}, index=idx)
-    return df
+    return pd.DataFrame({"Open": closes, "High": closes + 0.5, "Low": closes - 0.5,
+                         "Close": closes, "Volume": float(volume)}, index=idx)
 
 
-def test_momentum_screen_passes_strong_liquid_large_cap():
-    from app.services.darvas_service import momentum_screen
-    res = momentum_screen(_strong_stock(), market_cap_inr=5000 * 1e7)
-    assert res is not None and res["passed"] == 4
+def test_price_rules_pass_for_strong_liquid_large_cap():
+    from app.services.darvas_service import price_checks
+    res = price_checks(_strong_stock(), market_cap_inr=6000 * 1e7)
+    assert res["passed"] is True
+    assert 0 < res["below_high_pct"] < 10
+    assert res["above_low_pct"] > 100
 
 
-def test_momentum_screen_rejects_far_from_high_small_cap_or_illiquid():
-    from app.services.darvas_service import momentum_screen
+def test_price_rules_reject_each_failing_condition():
+    from app.services.darvas_service import price_checks
     df = _strong_stock()
-    assert momentum_screen(df, market_cap_inr=500 * 1e7) is None            # below Rs 1,000 Cr
-    assert momentum_screen(_strong_stock(volume=50_000), market_cap_inr=5000 * 1e7) is None  # thin volume
-    fallen = df.copy()
-    fallen.iloc[-1, fallen.columns.get_loc("Close")] = 60.0                 # far below the 52-week high
-    assert momentum_screen(fallen, market_cap_inr=5000 * 1e7) is None
+    assert price_checks(df, 4000 * 1e7)["passed"] is False                     # market cap below Rs 5,000 Cr
+    assert price_checks(_strong_stock(volume=50_000), 6000 * 1e7)["passed"] is False  # thin volume
+    fallen = df.copy(); fallen.iloc[-1, fallen.columns.get_loc("Close")] = 120.0      # more than 10% below the high
+    assert price_checks(fallen, 6000 * 1e7)["passed"] is False
+    at_high = df.copy(); at_high.iloc[-1, at_high.columns.get_loc("Close")] = float(df["High"].max())
+    assert price_checks(at_high, 6000 * 1e7)["passed"] is False                # must be below the high, not at it
+
+
+def test_five_year_sales_growth_rule():
+    from app.services.darvas_service import sales_growth_5y
+    idx = ["2025-03-31", "2024-03-31", "2023-03-31", "2022-03-31", "2021-03-31"]
+    revs = [207.36, 172.8, 144.0, 120.0, 100.0]          # 20% a year
+    stmt = {"income_statement": {d: {"Total Revenue": r} for d, r in zip(idx, revs)}}
+    res = sales_growth_5y(stmt)
+    assert res["years"] == 4 and abs(res["cagr_pct"] - 20.0) < 0.1
+    assert sales_growth_5y({"income_statement": {idx[0]: {"Total Revenue": 1}}}) is None

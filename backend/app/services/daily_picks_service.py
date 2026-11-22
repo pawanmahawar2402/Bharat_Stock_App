@@ -43,14 +43,13 @@ def _pick_rows(scan: Dict[str, Any]) -> List[Dict[str, Any]]:
     rows = []
     for i, d in enumerate(scan.get("picks", [])[:PICK_COUNT], 1):
         plan = d.get("plan") or {}
-        box = d.get("box") or {}
         rows.append({
             "rank": i,
             "symbol": d["symbol"],
             "company_name": d.get("company_name", d["symbol"]),
             "sector": d.get("sector", ""),
             "signal": d.get("signal", ""),
-            "current_price": box.get("last_close"),
+            "current_price": d["metrics"]["last"],
             "entry": plan.get("entry"),
             "stop_loss": plan.get("stop_loss"),
             "target": plan.get("target"),
@@ -89,7 +88,8 @@ class DailyPicksEngine:
             reg = SourceRegistry.from_settings()
             # 3 parallel requests: Yahoo rate-limits heavier bursts and returns no data for the rest
             scan = DarvasScanner.scan(universe, nifty_1m, workers=3,
-                                      history_loader=lambda s: _history_with_retry(reg, s))
+                                      history_loader=lambda s: _history_with_retry(reg, s),
+                                      statements_loader=lambda s: reg.statements(s))
 
             payload = {
                 "date": ist_today(),

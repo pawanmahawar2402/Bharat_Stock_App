@@ -169,50 +169,52 @@ def score_darvas(d: Dict[str, Any], trend_ok: bool, rs_1m_vs_nifty: Optional[flo
     return round(base + (10.0 if trend_ok else 0.0), 1)
 
 
-MIN_MOMENTUM_TESTS = 3               # of the four strength tests, at least this many must pass
-MIN_MARKET_CAP_INR = 1000 * 1e7      # Rs 1,000 crore
-MIN_AVG_VOLUME_SHARES = 100_000      # more than 1 lakh shares a day
-NEAR_52W_HIGH_PCT = 0.10             # within 10% of the 52-week high
-MIN_MULTIPLE_OF_52W_LOW = 2.0        # at least 2x the 52-week low
+# Best Picks screen: every rule must hold
+MAX_BELOW_HIGH_PCT = 10.0      # 100*(High - Current)/High  < 10, and > 0 (below the 52-week high, not at it)
+MIN_ABOVE_LOW_PCT = 100.0      # 100*(Current/Low - 1)      > 100 (more than double the 52-week low)
+MIN_MARKET_CAP_CR = 5000.0     # market capitalisation above Rs 5,000 crore
+MIN_VOLUME_SHARES = 100_000    # average daily volume above 100,000 shares
+MIN_SALES_CAGR_PCT = 12.0      # five-year sales growth above 12%
+MIN_SALES_YEARS = 3            # at least three years of annual sales to measure growth
 
 
-def momentum_checks(df: pd.DataFrame, market_cap_inr: Optional[float]) -> Optional[Dict[str, Any]]:
-    """
-    The four strength tests, each evaluated separately:
-      near_52w_high : last close within 10% of the 52-week high
-      twice_52w_low : last close at least 2x the 52-week low
-      liquid        : average daily volume above 1 lakh shares
-      large_cap     : market capitalisation above Rs 1,000 crore
-    Returns each test's result and the number passed (0-4), or None when there is too little data.
-    """
-    if df is None or df.empty or len(df) < 60:
+def price_checks(df: pd.DataFrame, market_cap_inr: Optional[float]) -> Optional[Dict[str, Any]]:
+    """The price, volume and size rules. Returns the measured values and whether all three pass."""
+    if df is None or df.empty or len(df) < 60 or not market_cap_inr:
         return None
     window = df.tail(252)
     last = float(df["Close"].iloc[-1])
-    high52 = float(window["High"].max())
-    low52 = float(window["Low"].min())
+    high = float(window["High"].max())
+    low = float(window["Low"].min())
+    if high <= 0 or low <= 0:
+        return None
+    below_high = 100.0 * (high - last) / high
+    above_low = 100.0 * (last / low - 1.0)
     avg_vol = float(df["Volume"].tail(20).mean()) if "Volume" in df.columns else 0.0
-    checks = {
-        "near_52w_high": last >= (1 - NEAR_52W_HIGH_PCT) * high52,
-        "twice_52w_low": low52 > 0 and last >= MIN_MULTIPLE_OF_52W_LOW * low52,
-        "liquid": avg_vol >= MIN_AVG_VOLUME_SHARES,
-        "large_cap": bool(market_cap_inr) and market_cap_inr >= MIN_MARKET_CAP_INR,
-    }
-    checks["passed"] = sum(1 for k in ("near_52w_high", "twice_52w_low", "liquid", "large_cap") if checks[k])
-    checks["last"] = last
-    checks["high_52w"] = high52
-    checks["low_52w"] = low52
-    return checks
+    mcap_cr = market_cap_inr / 1e7
+    passed = (0 < below_high < MAX_BELOW_HIGH_PCT and above_low > MIN_ABOVE_LOW_PCT
+              and mcap_cr > MIN_MARKET_CAP_CR and avg_vol > MIN_VOLUME_SHARES)
+    return {"passed": passed, "last": last, "high_52w": high, "low_52w": low,
+            "below_high_pct": round(below_high, 2), "above_low_pct": round(above_low, 2),
+            "market_cap_cr": round(mcap_cr, 2), "avg_volume": avg_vol}
 
 
-def momentum_screen(df: pd.DataFrame, market_cap_inr: Optional[float]) -> Optional[Dict[str, Any]]:
-    """True only when all four strength tests pass."""
-    checks = momentum_checks(df, market_cap_inr)
-    return checks if checks and checks["passed"] == 4 else None
+def sales_growth_5y(statements: Optional[Dict[str, Any]]) -> Optional[Dict[str, float]]:
+    """Compound annual growth of total revenue over the longest span reported (up to five years)."""
+    from app.services.fundamental_engine import StatementView
+    if not statements:
+        return None
+    inc = StatementView(statements.get("income_statement"))
+    revs = [v for v in inc.series(["Total Revenue", "Operating Revenue"], n=5) if v and v > 0]
+    years = len(revs) - 1
+    if years < MIN_SALES_YEARS:
+        return None
+    cagr = (revs[0] / revs[-1]) ** (1.0 / years) - 1.0
+    return {"cagr_pct": round(cagr * 100, 2), "years": years}
 
 
 def _market_cap_inr(symbol: str) -> Optional[float]:
-    """Market capitalisation from Yahoo's quick quote (lightweight, works where the full profile does not)."""
+    """Market capitalisation from Yahoo's quick quote (lightweight)."""
     try:
         import yfinance as yf
         value = yf.Ticker(symbol).fast_info["market_cap"]
@@ -223,55 +225,47 @@ def _market_cap_inr(symbol: str) -> Optional[float]:
 
 class DarvasScanner:
     @staticmethod
-    def analyse(symbol: str, nifty_1m: Optional[float], history_loader=None) -> Optional[Dict[str, Any]]:
+    def analyse(symbol: str, nifty_1m: Optional[float], history_loader=None,
+                statements_loader=None) -> Optional[Dict[str, Any]]:
+        """Applies the price, volume and size rules first; sales growth is checked only for those that pass."""
         loader = history_loader or (lambda s: DataFetcher.fetch_history(s, period="1y", interval="1d"))
         df = loader(symbol)
-        if df is None or df.empty or len(df) < 60:
+        pc = price_checks(df, _market_cap_inr(symbol))
+        if pc is None or not pc["passed"]:
             return None
+        sales = sales_growth_5y(statements_loader(symbol) if statements_loader else None)
+        if sales is None or sales["cagr_pct"] <= MIN_SALES_CAGR_PCT:
+            return None
+
         close = df["Close"]
-        last = float(close.iloc[-1])
-        checks = momentum_checks(df, _market_cap_inr(symbol))
-        if checks is None or checks["passed"] < MIN_MOMENTUM_TESTS:
-            return None
+        last = pc["last"]
         sma200 = float(close.rolling(200).mean().iloc[-1]) if len(close) >= 200 else float(close.mean())
         trend_ok = last > sma200
-
         box = find_darvas_box(df)
-        if box is None or box["status"] not in ("Breakout", "Near breakout", "Inside box"):
-            return None
-        if not trend_ok or box["box_height_pct"] > MAX_BOX_HEIGHT_PCT:
-            return None
-        if box["status"] == "Inside box":
-            # Watchlist tier: tight box, price drifting toward the top, not yet triggered
-            if box["box_height_pct"] > WATCHLIST_MAX_HEIGHT_PCT or box["distance_to_top_pct"] > WATCHLIST_MAX_DISTANCE_PCT:
-                return None
-        stock_1m = (last / float(close.iloc[-22]) - 1) * 100 if len(close) >= 22 else None
-        rs = (stock_1m - nifty_1m) if (stock_1m is not None and nifty_1m is not None) else None
-        plan = darvas_trade_plan(box)
-        # Risk:reward is reported but not gated: with the box top as entry and the measured move
-        # as target it is structurally ~1.0, and Darvas managed winners with a trailing stop.
-        if plan["risk_reward"] is None:
-            return None
+        plan = None
+        score = 10.0 * (1 - pc["below_high_pct"] / MAX_BELOW_HIGH_PCT) + min(pc["above_low_pct"], 300.0) / 30.0
+        signal = _chart_breakout_signal(df)
+        if box is not None and box["status"] in ("Breakout", "Near breakout", "Inside box"):
+            plan = darvas_trade_plan(box)
+            score += score_darvas(box, trend_ok, None)
         return {
             "symbol": symbol,
-            "status": box["status"],
-            "signal": _chart_breakout_signal(df),
-            "tier": "Actionable" if box["status"] in ("Breakout", "Near breakout") else "Watchlist (not triggered)",
-            "score": score_darvas(box, trend_ok, rs) + 25.0 * checks["passed"],
-            "momentum_tests_passed": checks["passed"],
-            "trend_above_200dma": trend_ok,
+            "status": box["status"] if box else "No box",
+            "score": round(score, 1),
+            "signal": signal,
             "box": box,
             "plan": plan,
-            "relative_strength_1m_vs_nifty": round(rs, 2) if rs is not None else None,
+            "metrics": pc,
+            "sales": sales,
         }
 
     @staticmethod
-    def scan(symbols_with_meta: List[Tuple[str, str, str]], nifty_1m: Optional[float], workers: int = 6,
-             history_loader=None) -> Dict[str, Any]:
+    def scan(symbols_with_meta: List[Tuple[str, str, str]], nifty_1m: Optional[float], workers: int = 3,
+             history_loader=None, statements_loader=None) -> Dict[str, Any]:
         results: List[Dict[str, Any]] = []
         analysed = 0
         with ThreadPoolExecutor(max_workers=workers) as ex:
-            futures = {ex.submit(DarvasScanner.analyse, sym, nifty_1m, history_loader): (sym, name, sector)
+            futures = {ex.submit(DarvasScanner.analyse, sym, nifty_1m, history_loader, statements_loader): (sym, name, sector)
                        for sym, name, sector in symbols_with_meta}
             for fut in as_completed(futures):
                 sym, name, sector = futures[fut]
@@ -282,7 +276,7 @@ class DarvasScanner:
                         res.update({"company_name": name, "sector": sector})
                         results.append(res)
                 except Exception as e:
-                    logger.error(f"Darvas analysis failed for {sym}: {e}")
+                    logger.error(f"Best picks analysis failed for {sym}: {e}")
         results.sort(key=lambda r: r["score"], reverse=True)
         return {"considered": len(symbols_with_meta), "analysed": analysed,
                 "setups_found": len(results), "picks": results[:10]}

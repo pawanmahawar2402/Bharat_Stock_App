@@ -71,3 +71,32 @@ def peers_for(db: Session, symbol: str, market_cap_inr: Optional[float] = None) 
     group = master.sector if master and master.sector else None
     syms = peer_symbols(db, group, symbol, limit=12)
     return multiples_for(tuple(syms), market_cap_inr) if syms else {}
+
+
+@ttl_cache(3600)
+def market_cap_of(symbol: str) -> Optional[float]:
+    """Market capitalisation in INR from Yahoo's quick quote (cheap; cached for an hour)."""
+    try:
+        import yfinance as yf
+        value = yf.Ticker(symbol).fast_info["market_cap"]
+        return float(value) if value else None
+    except Exception:
+        return None
+
+
+def top_peers_by_market_cap(db: Session, symbol: str, limit: int = 10) -> List[Dict]:
+    """The largest companies in the same sector group, ranked by market capitalisation."""
+    master = db.query(StockMaster).filter(StockMaster.symbol == symbol).first()
+    group = master.sector if master and master.sector else None
+    if not group or group == "Diversified":
+        return []
+    members = (db.query(StockMaster)
+               .filter(StockMaster.sector == group, StockMaster.is_active == True).all())
+    caps = []
+    for m in members:
+        mc = market_cap_of(m.symbol)
+        if mc:
+            caps.append((mc, m.symbol, m.name))
+    caps.sort(reverse=True)
+    return [{"symbol": sym, "name": name, "market_cap_inr": mc, "is_selected": sym == symbol}
+            for mc, sym, name in caps[:limit]]
