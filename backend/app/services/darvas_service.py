@@ -171,7 +171,7 @@ def score_darvas(d: Dict[str, Any], trend_ok: bool, rs_1m_vs_nifty: Optional[flo
 
 # Best Picks screen: every rule must hold
 MAX_BELOW_HIGH_PCT = 10.0      # 100*(High - Current)/High  < 10, and > 0 (below the 52-week high, not at it)
-MIN_ABOVE_LOW_PCT = 100.0      # 100*(Current/Low - 1)      > 100 (more than double the 52-week low)
+MIN_ABOVE_LOW_PCT = 50.0       # 100*(Current/Low - 1)      > 50 (at least 50% above the 52-week low)
 MIN_MARKET_CAP_CR = 5000.0     # market capitalisation above Rs 5,000 crore
 MIN_VOLUME_SHARES = 100_000    # average daily volume above 100,000 shares
 MIN_SALES_CAGR_PCT = 12.0      # five-year sales growth above 12%
