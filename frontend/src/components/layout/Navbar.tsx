@@ -44,7 +44,7 @@ export default function Navbar({
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                Institutional Equity & Macro Intelligence (NSE/BSE)
+                Grow your portfolio with Pawan
               </p>
             </div>
           </div>

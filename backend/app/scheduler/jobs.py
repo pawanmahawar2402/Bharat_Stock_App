@@ -34,6 +34,17 @@ def start_scheduler():
         # Run every 6 hours
         scheduler.add_job(nightly_price_and_macro_refresh, "interval", hours=6, id="nightly_refresh", replace_existing=True)
         # Daily Two Picks: after market close, Mon-Fri IST
+        from app.services.corporate_actions import refresh as refresh_actions
+        from app.db.models import StockMaster
+        def _refresh_actions():
+            db = SessionLocal()
+            try:
+                members = [(r.symbol, r.name) for r in db.query(StockMaster).filter(StockMaster.is_nifty500 == True).all()]
+            finally:
+                db.close()
+            refresh_actions(members)
+        scheduler.add_job(_refresh_actions, "cron", hour=6, minute=0, timezone="Asia/Kolkata",
+                          id="corporate_actions", replace_existing=True)
         scheduler.add_job(
             DailyPicksEngine.run_safe, "cron",
             day_of_week="mon-fri", hour=settings.DAILY_PICKS_HOUR_IST, minute=settings.DAILY_PICKS_MINUTE_IST,

@@ -33,20 +33,10 @@ class MarketPulseService:
         """
         Returns structured corporate actions with rule-based signal tags.
         """
-        seed = MarketPulseService.get_seed_data()
-        actions = seed.get("actions", [])
-
-        # Filter
+        from app.services.corporate_actions import recent_events
+        actions = recent_events(symbol)
         if action_type and action_type.lower() != "all":
             actions = [a for a in actions if a.get("action_type", "").lower() == action_type.lower()]
-
-        if market_cap_category and market_cap_category.lower() != "all":
-            actions = [a for a in actions if a.get("market_cap_category", "").lower() == market_cap_category.lower()]
-
-        if symbol:
-            sym_clean = symbol.upper().replace(".NS", "").replace(".BO", "")
-            actions = [a for a in actions if sym_clean in a.get("symbol", "").upper()]
-
         return actions
 
     @staticmethod
