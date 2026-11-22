@@ -74,6 +74,29 @@ def value_company(fund: Dict[str, Any], fin: Dict[str, Any], peers: Optional[Dic
         code, label = "ASSET_BASED", "Book value (asset-based)"
         rationale = "Trades close to net asset value with no reliable earnings or revenue multiple."
 
+    if value is None or value <= 0:
+        # No comparable companies: fall back to the company's own cash-flow models, so a value is always reported
+        fallbacks = [
+            ("FCFF", "DCF_FALLBACK", "Discounted cash flow (no comparable companies)",
+             "No comparable companies were available, so the value comes from the company's own cash flows."),
+            ("FCFE", "FCFE_FALLBACK", "Equity cash flow (no comparable companies)",
+             "No comparable companies were available, so the value comes from the company's own equity cash flows."),
+            ("P_B_ROE", "JUSTIFIED_PB", "Justified P/B (ROE model)",
+             "Value follows the return on equity relative to the cost of equity, applied to book value."),
+        ]
+        vd = cross.get("VALUE_DRIVER", {}).get("scenarios", {}).get("base", {}).get("value_per_share")
+        for key, fcode, flabel, frat in fallbacks:
+            v = cross.get(key, {}).get("value_per_share") if key != "VALUE_DRIVER" else None
+            if v and v > 0:
+                value, code, label, rationale = v, fcode, flabel, frat
+                break
+        if (value is None or value <= 0) and vd and vd > 0:
+            value, code, label = vd, "VALUE_DRIVER_FALLBACK", "Normalised earnings (no comparable companies)"
+            rationale = "No comparable companies were available, so the value comes from normalised operating profit."
+        if (value is None or value <= 0) and bvps and bvps > 0:
+            value, code, label = bvps, "ASSET_BASED", "Book value (asset-based)"
+            rationale = "Only net asset value per share was available."
+
     if not peers and code not in ("JUSTIFIED_PB", "ASSET_BASED"):
         gaps.append("Sector peer multiples unavailable; intrinsic value uses the company's own figures")
 

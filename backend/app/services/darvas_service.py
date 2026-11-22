@@ -174,7 +174,7 @@ MAX_BELOW_HIGH_PCT = 10.0      # 100*(High - Current)/High  < 10, and > 0 (below
 MIN_ABOVE_LOW_PCT = 50.0       # 100*(Current/Low - 1)      > 50 (at least 50% above the 52-week low)
 MIN_MARKET_CAP_CR = 5000.0     # market capitalisation above Rs 5,000 crore
 MIN_VOLUME_SHARES = 100_000    # average daily volume above 100,000 shares
-MIN_SALES_CAGR_PCT = 12.0      # five-year sales growth above 12%
+MIN_SALES_CAGR_PCT = 15.0      # five-year sales growth above 15%
 MIN_SALES_YEARS = 3            # at least three years of annual sales to measure growth
 
 
@@ -228,9 +228,13 @@ class DarvasScanner:
     def analyse(symbol: str, nifty_1m: Optional[float], history_loader=None,
                 statements_loader=None) -> Optional[Dict[str, Any]]:
         """Applies the price, volume and size rules first; sales growth is checked only for those that pass."""
+        # Cheapest test first: market capitalisation (one quick quote) before any price history is fetched
+        mcap = _market_cap_inr(symbol)
+        if not mcap or mcap / 1e7 <= MIN_MARKET_CAP_CR:
+            return None
         loader = history_loader or (lambda s: DataFetcher.fetch_history(s, period="1y", interval="1d"))
         df = loader(symbol)
-        pc = price_checks(df, _market_cap_inr(symbol))
+        pc = price_checks(df, mcap)
         if pc is None or not pc["passed"]:
             return None
         sales = sales_growth_5y(statements_loader(symbol) if statements_loader else None)
@@ -279,4 +283,4 @@ class DarvasScanner:
                     logger.error(f"Best picks analysis failed for {sym}: {e}")
         results.sort(key=lambda r: r["score"], reverse=True)
         return {"considered": len(symbols_with_meta), "analysed": analysed,
-                "setups_found": len(results), "picks": results[:10]}
+                "setups_found": len(results), "picks": results}

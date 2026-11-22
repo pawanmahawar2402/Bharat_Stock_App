@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     DATA_SOURCES: str = "yahoo,stock_list,statement_derived,history_beta"
 
     # Daily Two Picks engine
-    DAILY_UNIVERSE_SIZE: int = 1000   # screen the whole Nifty 500 list
+    DAILY_UNIVERSE_SIZE: int = 5000   # screen every NSE equity in the bundled list
     DAILY_PICKS_HOUR_IST: int = 16    # run after market close (15:30 IST)
     DAILY_PICKS_MINUTE_IST: int = 30
 

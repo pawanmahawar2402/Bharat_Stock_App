@@ -41,7 +41,7 @@ def _history_with_retry(reg: SourceRegistry, symbol: str):
 
 def _pick_rows(scan: Dict[str, Any]) -> List[Dict[str, Any]]:
     rows = []
-    for i, d in enumerate(scan.get("picks", [])[:PICK_COUNT], 1):
+    for i, d in enumerate(scan.get("picks", []), 1):
         plan = d.get("plan") or {}
         rows.append({
             "rank": i,
@@ -68,10 +68,19 @@ class DailyPicksEngine:
 
     @staticmethod
     def universe(db: Session, limit: int) -> List[tuple]:
-        rows = (db.query(StockMaster)
-                .filter(StockMaster.is_nifty500 == True, StockMaster.is_active == True)
-                .order_by(StockMaster.symbol).limit(limit).all())
-        return [(r.symbol, r.name, r.sector or "") for r in rows]
+        """
+        Candidates that pass the 52-week and volume rules, from NSE's daily price files
+        (the whole EQ-series market). Market cap and sales growth are then checked per candidate.
+        """
+        import csv
+        from pathlib import Path
+        from app.services.bhavcopy import price_volume_survivors
+        path = Path(__file__).resolve().parents[3] / "data" / "nse_equities.csv"
+        names = {}
+        with open(path, newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                names[row["Symbol"].strip()] = row["Company Name"].strip()
+        return price_volume_survivors(names)[:limit]
 
     @classmethod
     def run(cls, db: Session, universe_size: Optional[int] = None) -> Optional[Dict[str, Any]]:
@@ -79,15 +88,16 @@ class DailyPicksEngine:
         if not cls._lock.acquire(blocking=False):
             return None
         try:
-            universe = cls.universe(db, universe_size or settings.DAILY_UNIVERSE_SIZE)
             cls._status.update({"state": "running", "started_at": datetime.utcnow().isoformat(),
-                                "finished_at": None, "processed": 0, "total": len(universe), "error": None})
+                                "finished_at": None, "processed": 0, "total": 0, "error": None})
+            universe = cls.universe(db, universe_size or settings.DAILY_UNIVERSE_SIZE)
+            cls._status.update({"total": len(universe)})
 
             market_inds = MacroService.get_market_indicators()
             nifty_1m = next((m.get("change_1m_pct") for m in market_inds if m.get("name") == "Nifty 50"), None)
             reg = SourceRegistry.from_settings()
             # 3 parallel requests: Yahoo rate-limits heavier bursts and returns no data for the rest
-            scan = DarvasScanner.scan(universe, nifty_1m, workers=3,
+            scan = DarvasScanner.scan(universe, nifty_1m, workers=2,
                                       history_loader=lambda s: _history_with_retry(reg, s),
                                       statements_loader=lambda s: reg.statements(s))
 
